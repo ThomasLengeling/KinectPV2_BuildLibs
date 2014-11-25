@@ -19,12 +19,27 @@
 
 
 // Safe release for interfaces
-template<class Interface>
-inline void SafeRelease(Interface *& pInterfaceToRelease)
+template<class T>
+inline void SafeRelease(T *& pInterfaceToRelease)
 {
 	if (pInterfaceToRelease != NULL)
 	{
 		pInterfaceToRelease->Release();
 		pInterfaceToRelease = NULL;
 	}
+}
+
+template<typename T>
+inline void SafeArrayDelete(T*& pArray)
+{
+	delete[] pArray;
+	pArray = nullptr;
+}
+
+
+template<typename T>
+inline void SafeDelete(T*& pObject)
+{
+	delete pObject;
+	pObject = nullptr;
 }
