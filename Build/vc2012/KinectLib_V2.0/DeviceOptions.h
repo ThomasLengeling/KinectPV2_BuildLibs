@@ -80,7 +80,10 @@ namespace KinectPV2{
 							initToggleBodyIndexFrame = toggle;
 		}
 
-		void			enablePointCloud(bool toggle = true){ togglePointCloudFrame = toggle; }
+		void			enablePointCloud(bool toggle = true){ 
+							togglePointCloudFrame = toggle; 
+						}
+						
 		void			enablePointCloudColor(bool toggle = true){
 							togglePointCloudColorFrame = toggle;
 							initToggleDepthFrame = toggle;
