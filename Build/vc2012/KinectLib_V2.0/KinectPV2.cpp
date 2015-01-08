@@ -1,3 +1,4 @@
+// PKinect.cpp : Defines the exported functions for the DLL application.
 //
 
 #include "stdafx.h"
@@ -7,6 +8,8 @@ using namespace std;
 
 static const DWORD c_FaceFrameFeatures =
 FaceFrameFeatures::FaceFrameFeatures_BoundingBoxInColorSpace
+| FaceFrameFeatures::FaceFrameFeatures_BoundingBoxInInfraredSpace
+| FaceFrameFeatures::FaceFrameFeatures_PointsInInfraredSpace
 | FaceFrameFeatures::FaceFrameFeatures_PointsInColorSpace
 | FaceFrameFeatures::FaceFrameFeatures_RotationOrientation
 | FaceFrameFeatures::FaceFrameFeatures_Happy
@@ -18,25 +21,23 @@ FaceFrameFeatures::FaceFrameFeatures_BoundingBoxInColorSpace
 | FaceFrameFeatures::FaceFrameFeatures_Glasses
 | FaceFrameFeatures::FaceFrameFeatures_FaceEngagement;
 
-
-
 static const double c_FaceRotationIncrementInDegrees = 5.0f;
 
+uint32_t  bodyColors[] = { 0xffffffff, 0x00ff00ff, 0xff0000ff, 0xffff00ff, 0xff00ffff, 0x00ffffff, 0x0000ffff };
 
 namespace KinectPV2{
-
-	DeviceOptions::DeviceOptions() :
-		toggleColorFrame(false), toggleDepthFrame(false), toggleInFraredFrame(false), toggleDepthMaskFrame(false), toggleSkeletonDepthMap(false),
-		toggleInFraredLongExposure(false), togglePointCloud(false), togglePointCloudColor(false), toggleFaceDetection(false), toggleSkeleton3dMap(false),
-		toggleRawDepthData(false), toggleBodyTrack(false), toggleSkeleton(false), toggleSkeletonColorMap(false), togglCoodinateMappingColor(false), toggleHDFaceDetection(false){}
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	Device::Device()
+	Device::Device() :
+		pixelsData(NULL), pixelsDataTemp(NULL), colorChannelsData(NULL), colorChannelsDataTemp(NULL), outCoordMapperRGBX(NULL),
+		depthData(NULL), depthMaskData(NULL), depthRawData(NULL), pointCloudPosData(NULL), pointCloudColorData(NULL),
+		pointCloudDepthImage(NULL), pointCloudDepthNormalized(NULL), pointCloudRawImage(NULL), colorCameraPos(NULL), infraredData(NULL),
+		longExposureData(NULL), skeletonData3dMap(NULL), skeletonDataDepthMap(NULL), skeletonDataColorMap(NULL), faceDataColor(NULL),
+		faceDataInInfrared(NULL), hdFaceDeformations(NULL), hdFaceVertex(NULL), hdFaceVertexCount(NULL), mapDepthCameraTableData(NULL),
+		mapDepthToColorData(NULL), mapColorToDepthData(NULL), bodyIndexData(NULL), bodyTrackingIndex(NULL),
+		bodyTackDataUser_1(NULL), bodyTackDataUser_2(NULL), bodyTackDataUser_3(NULL), bodyTackDataUser_4(NULL), bodyTackDataUser_5(NULL), bodyTackDataUser_6(NULL)
 	{
 		DeviceOptions();
-
-		//COLOR
-		pixelsData = (uint8_t  *)malloc(BUFFER_SIZE_COLOR);
-		colorFrameData = (uint8_t *)malloc(BUFFER_SIZE_COLOR);
+		DeviceActivators();
 
 		//COORDINATE MAPER RGB + DEPTH
 		outCoordMapperRGBX = (uint8_t *)malloc(BUFFER_SIZE_COLOR);
@@ -49,30 +50,10 @@ namespace KinectPV2{
 			backgroundRGBX[index++] = 0xff;
 		}
 
-		//DEPTH
-		depthData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-		depthRawData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-		depthMaskData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-
-		infraredData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-		bodyTrackData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-		longExposureData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-
-		skeletonData3dMap = (float *)malloc(JOINTSIZE * sizeof(float));
-		skeletonDataDepthMap = (float *)malloc(JOINTSIZE * sizeof(float));
-		skeletonDataColorMap = (float *)malloc(JOINTSIZE * sizeof(float));
-
-		//FACE DATA
-		faceData			= (float *)malloc(FACESIZE * sizeof(float));
-		hdFaceDeformations  = (float *)malloc(BODY_COUNT * FaceShapeDeformations::FaceShapeDeformations_Count * sizeof(float));
-		hdFaceVertex		= (float *)malloc(HDFACEVERTEX *  sizeof(float));
-
-
 		pointCloudPosData = (float *)malloc(frame_size_depth * 3 * sizeof(float));
 
 		pointCloudDepthImage = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
 		pointCloudDepthNormalized = (float *)malloc(frame_size_depth * sizeof(float));
-
 		pointCloudColorData = (float *)malloc(frame_size_color * 3 * sizeof(float));
 		colorCameraPos = (float *)malloc(frame_size_color * 2 * sizeof(float));
 
@@ -80,22 +61,17 @@ namespace KinectPV2{
 		mCamaraSpacePointColor = new CameraSpacePoint[frame_size_color];
 		mColorSpacePoint	   = new ColorSpacePoint[frame_size_depth];
 		mDepthCoordinates      = new DepthSpacePoint[frame_size_color];
+		mDepthToColorPoints    = new ColorSpacePoint[frame_size_depth];
+
+		//CREATE MAP DATA
+		mapDepthCameraTableData = (float *)malloc(frame_size_depth * 2 * sizeof(float));
+
+		mapDepthToColorData		= (float *)malloc(frame_size_depth * 2 * sizeof(float));
+		//mapColorToDepthData     = (float *)malloc(frame_size_depth * 2 * sizeof(float));
 
 
-
-	
 		for (int i = 0; i < frame_size_depth * 3; i++){
 			pointCloudPosData[i] = 0;
-		}
-
-		for (int i = 0; i < JOINTSIZE; i++){
-			skeletonData3dMap[i] = 0.0;
-			skeletonDataDepthMap[i] = 0.0;
-			skeletonDataColorMap[i] = 0.0;
-		}
-
-		for (int i = 0; i < FACESIZE; i++){
-			faceData[i] = 0.0;
 		}
 
 		for (int i = 0; i < BODY_COUNT; i++)
@@ -109,12 +85,17 @@ namespace KinectPV2{
 			produce[i] = false;
 		}
 
+
 		appWidth = 1024;
 		appHeight = 768;
 
 		depthPCHighTh = 8.0f;
 		depthPCLowTh = 0.0f;
-		skeletonMapType = 0;
+
+		activateMapDepthToCamaraTable = false;
+		activateMapDepthToColor = false;
+
+		numberUsers = 6;
 	}
 
 	bool Device::init()
@@ -148,45 +129,103 @@ namespace KinectPV2{
 			if (SUCCEEDED(hr))
 			{
 				long flags = 0L;
-				if (DeviceOptions::isEnableColorFrame())
+				if (DeviceOptions::isInitializedColorFrame())
 				{
 					std::cout << "ENABLE COLOR FRAME" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_Color;
+
+					pixelsData = (uint8_t *)malloc(BUFFER_SIZE_COLOR);
+					pixelsDataTemp = (uint8_t *)malloc(BUFFER_SIZE_COLOR);
+
+					colorChannelsData = (float *)malloc(frame_size_color * 3 * sizeof(float));
+					colorChannelsDataTemp = (RGBQUAD *)malloc(frame_size_color*sizeof(RGBQUAD));
 				}
 
-				if (DeviceOptions::isEnableDepthFrame())
+				if (DeviceOptions::isInitializedDepthFrame())
 				{
 					std::cout << "ENABLE DEPTH FRAME" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_Depth;
+
+					depthData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					depthRawData = (uint16_t *)malloc(frame_size_depth * sizeof(uint16_t));
+
+					depthMaskData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
 				}
 
-				if (DeviceOptions::isEnableInFraredFrame())
+				if (DeviceOptions::isInitializedInfraredFrame())
 				{
 					std::cout << "ENABLE INFRARED FRAME" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_Infrared;
+
+					infraredData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
 				}
 
-				if (DeviceOptions::isEnableBodyTrack())
+				if (DeviceOptions::isInitializedBodyIndexFrame())
 				{
 					std::cout << "ENABLE BODY TRACK" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_BodyIndex;
+
+
+					bodyIndexData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+
+					bodyTackDataUser_1 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					bodyTackDataUser_2 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					bodyTackDataUser_3 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					bodyTackDataUser_4 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					bodyTackDataUser_5 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					bodyTackDataUser_6 = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+
+					//BODY TRACKING DATA
+					bodyTrackingIndex = (uint32_t *)malloc(BODY_COUNT * sizeof(uint32_t));
 				}
-				if (DeviceOptions::isEnableSkeleton())
+				if (DeviceOptions::isInitializedSkeleton())
 				{
 					std::cout << "ENABLE SKELETON" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_Body;
+
+					skeletonData3dMap = (float *)malloc(JOINTSIZE * sizeof(float));
+					skeletonDataDepthMap = (float *)malloc(JOINTSIZE * sizeof(float));
+					skeletonDataColorMap = (float *)malloc(JOINTSIZE * sizeof(float));
+
+					for (int i = 0; i < JOINTSIZE; i++){
+						skeletonData3dMap[i] = 0.0;
+						skeletonDataDepthMap[i] = 0.0;
+						skeletonDataColorMap[i] = 0.0;
+					}
+
 				}
-				if (DeviceOptions::isEnableInfraredExposureFrame())
+				if (DeviceOptions::isInitializedLongExposureInfraredFrame())
 				{
 					std::cout << "ENABLE LONG EXPOSURE INFRARED" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_LongExposureInfrared;
+
+					longExposureData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
 				}
-				if (DeviceOptions::isEnableFaceDetection())
+				if (DeviceOptions::isInitializedFaceDetection())
 				{
 					cout << "SETTING FACE TRACKING" << std::endl;
 
-					if (!DeviceOptions::isEnableSkeleton()){
+					if (!DeviceOptions::isInitializedSkeleton()){
 						flags |= FrameSourceTypes::FrameSourceTypes_Body;
+
+						skeletonData3dMap = (float *)malloc(JOINTSIZE * sizeof(float));
+						skeletonDataDepthMap = (float *)malloc(JOINTSIZE * sizeof(float));
+						skeletonDataColorMap = (float *)malloc(JOINTSIZE * sizeof(float));
+
+						for (int i = 0; i < JOINTSIZE; i++){
+							skeletonData3dMap[i] = 0.0;
+							skeletonDataDepthMap[i] = 0.0;
+							skeletonDataColorMap[i] = 0.0;
+						}
+					}
+
+					//FACE DATA
+					faceDataColor = (float *)malloc(FACESIZE * sizeof(float));
+					faceDataInInfrared = (float *)malloc(FACESIZE * sizeof(float));
+
+					for (int i = 0; i < FACESIZE; i++){
+						faceDataColor[i] = 0.0;
+						faceDataInInfrared[i] = 0.0;
 					}
 
 					for (int i = 0; i < BODY_COUNT; i++){
@@ -200,15 +239,30 @@ namespace KinectPV2{
 						}
 					}
 				}
-				if (DeviceOptions::isEnableHDFaceDetection()){
+				if (DeviceOptions::isInitializedHDFaceDetection()){
 
-					if (!DeviceOptions::isEnableSkeleton()){
+					if (!DeviceOptions::isInitializedSkeleton()){
 						flags |= FrameSourceTypes::FrameSourceTypes_Body;
+
+						skeletonData3dMap = (float *)malloc(JOINTSIZE * sizeof(float));
+						skeletonDataDepthMap = (float *)malloc(JOINTSIZE * sizeof(float));
+						skeletonDataColorMap = (float *)malloc(JOINTSIZE * sizeof(float));
+
+						for (int i = 0; i < JOINTSIZE; i++){
+							skeletonData3dMap[i] = 0.0;
+							skeletonDataDepthMap[i] = 0.0;
+							skeletonDataColorMap[i] = 0.0;
+						}
 					}
+
+					//HD FACE
+					hdFaceDeformations = (float *)malloc(BODY_COUNT * FaceShapeDeformations::FaceShapeDeformations_Count * sizeof(float));
+					hdFaceVertex = (float *)malloc(HDFACEVERTEX *  sizeof(float));
 
 					for (int count = 0; count < BODY_COUNT; count++){
 						// Source
 						hr = CreateHighDefinitionFaceFrameSource(kSensor, &kHDFaceSource[count]);
+
 						if (FAILED(hr)){
 							cout << "Error : CreateHighDefinitionFaceFrameSource()" << std::endl;
 							return false;
@@ -254,6 +308,8 @@ namespace KinectPV2{
 							std::cout << "Error : GetFaceModelVertexCount()" << std::endl;
 							return false;
 						}
+
+				
 					}
 					std::cout << "ENABLE HDFACE" << std::endl;
 				}
@@ -266,6 +322,9 @@ namespace KinectPV2{
 						SafeRelease(kMultiSourceFrameReader);
 						cout << "ERROR READING FRAME DATA" << std::endl;
 						return false;
+					}
+					else{
+						cout << "NO FRAME DATA" << std::endl;
 					}
 				}
 			}
@@ -299,85 +358,60 @@ namespace KinectPV2{
 
 	void Device::stop()
 	{
-		cout << "Clossing kinect V2" << std::endl;
-
+		
 		SafeRelease(kCoordinateMapper);
 		SafeRelease(kMultiSourceFrameReader);
-
-		for (int i = 0; i < BODY_COUNT; i++)
-		{
-			SafeRelease(kFaceFrameSources[i]);
-			SafeRelease(kFaceFrameReaders[i]);
-		}
-
-		DeviceOptions::enableInFraredImage(false);
-		DeviceOptions::enableColorImage(false);
-		DeviceOptions::enableDepthImage(false);
-		DeviceOptions::enableInFraredExposureImage(false);
-		DeviceOptions::enableBodyTrack(false);
-		DeviceOptions::enableSkeleton(false);
-		DeviceOptions::enablePointCloud(false);
-		DeviceOptions::enableRawDepthData(false);
-		DeviceOptions::enableDepthMaskImage(false);
-		DeviceOptions::enableFaceDetection(false);
-		DeviceOptions::enableSkeletonDepthMap(false);
-		DeviceOptions::enablePointCloudColor(false);
 
 		if (kSensor) {
 			kSensor->Close();
 		}
 		SafeRelease(kSensor);
 
-		free(pixelsData);
-		free(depthData);
-		free(infraredData);
-		free(colorFrameData);
-		free(longExposureData);
-		free(bodyTrackData);
-		free(depthRawData);
-		free(pointCloudColorData);
-		free(pointCloudPosData);
-		free(colorCameraPos);
-		free(depthMaskData);
-		free(faceData);
-		free(skeletonData3dMap);
-		free(skeletonDataDepthMap);
-		free(skeletonDataColorMap);
-		free(pointCloudDepthImage);
-		free(pointCloudDepthNormalized);
-		free(outCoordMapperRGBX);
-		free(backgroundRGBX);
+
+		SafeDeletePointer(pixelsData);
+		SafeDeletePointer(pixelsDataTemp);
+
+		for (int i = 0; i < BODY_COUNT; i++)
+		{
+			SafeRelease(kFaceFrameSources[i]);
+			SafeRelease(kFaceFrameReaders[i]);
+		}
 		
-		(pixelsData) = NULL;
-		(depthData) = NULL;
-		(infraredData) = NULL;
-		(colorFrameData) = NULL;
-		(skeletonData3dMap) = NULL;
-		(skeletonDataDepthMap) = NULL;
-		(skeletonDataColorMap) = NULL;
-		(longExposureData) = NULL;
-		(bodyTrackData) = NULL;
-		(depthRawData) = NULL;
-		(pointCloudColorData) = NULL;
-		(pointCloudPosData) = NULL;
-		(pointCloudDepthImage) = NULL;
-		(pointCloudDepthNormalized) = NULL;
-		(outCoordMapperRGBX) = NULL;
-		(backgroundRGBX) = NULL;
+		SafeDeletePointer(colorChannelsData);
+		SafeDeletePointer(colorChannelsDataTemp);
+		SafeDeletePointer(depthData);
+		SafeDeletePointer(infraredData);
+		SafeDeletePointer(longExposureData);
+		SafeDeletePointer(bodyIndexData);
+		SafeDeletePointer(depthRawData);
+		SafeDeletePointer(pointCloudColorData);
+		SafeDeletePointer(pointCloudPosData);
+		SafeDeletePointer(colorCameraPos);
+		SafeDeletePointer(depthMaskData);
+		SafeDeletePointer(faceDataColor);
+		SafeDeletePointer(faceDataInInfrared);
+		SafeDeletePointer(skeletonData3dMap);
+		SafeDeletePointer(skeletonDataDepthMap);
+		SafeDeletePointer(skeletonDataColorMap);
+		SafeDeletePointer(pointCloudDepthImage);
+		SafeDeletePointer(pointCloudDepthNormalized);
+		SafeDeletePointer(outCoordMapperRGBX);
+		SafeDeletePointer(backgroundRGBX);
+		SafeDeletePointer(mapDepthCameraTableData);
+		SafeDeletePointer(mapDepthToColorData);
 
-		(colorCameraPos) = NULL;
-		(depthMaskData) = NULL;
-		(faceData) = NULL;
+		SafeDeletePointer(bodyTackDataUser_1);
+		SafeDeletePointer(bodyTackDataUser_2);
+		SafeDeletePointer(bodyTackDataUser_3);
+		SafeDeletePointer(bodyTackDataUser_4);
+		SafeDeletePointer(bodyTackDataUser_5);
+		SafeDeletePointer(bodyTackDataUser_6);
 
-		delete[]  mCamaraSpacePointDepth;
-		delete[]  mCamaraSpacePointColor;
-		delete[]  mColorSpacePoint;
-		delete[]  mDepthCoordinates;
-
-		mDepthCoordinates = NULL;
-		mColorSpacePoint = NULL;
-		mCamaraSpacePointColor = NULL;
-		mCamaraSpacePointDepth = NULL;
+		SafeArrayDelete(mCamaraSpacePointDepth);
+		SafeArrayDelete(mCamaraSpacePointColor);
+		SafeArrayDelete(mColorSpacePoint);
+		SafeArrayDelete(mDepthCoordinates);
+		SafeArrayDelete(mDepthToColorPoints);
 
 		for (int count = 0; count < BODY_COUNT; count++){
 			SafeRelease(kHDFaceSource[count]);
@@ -387,6 +421,7 @@ namespace KinectPV2{
 			SafeRelease(kFaceModel[count]);
 		}
 
+		cout << "Closed KinectPV2" << std::endl;
 	}
 
 	bool Device::update()
@@ -410,14 +445,14 @@ namespace KinectPV2{
 				ColorImageFormat imageFormat = ColorImageFormat_None;
 				UINT nBufferSize = 0;
 				uint8_t *pBuffer = NULL;
+
 				IColorFrameReference* frameRef = 0;
-
 				hr = frame->get_ColorFrameReference(&frameRef);
-
 				if (SUCCEEDED(hr)) {
 					hr = frameRef->AcquireFrame(&pColorFrame);
 				}
 				SafeRelease(frameRef);
+
 
 				if (SUCCEEDED(hr))
 				{
@@ -442,21 +477,25 @@ namespace KinectPV2{
 				if (SUCCEEDED(hr))
 				{
 					//ColorImageFormat_Bgra
-					pBuffer = colorFrameData;// new uint32_t[frame_size_color * 4];
+					pBuffer = pixelsData;// new uint32_t[frame_size_color * 4];
 					hr = pColorFrame->CopyConvertedFrameDataToArray(BUFFER_SIZE_COLOR, reinterpret_cast<BYTE*>(pBuffer), ColorImageFormat_Bgra);
 
 					if (SUCCEEDED(hr)) {
 						memcpy(pixelsData, pBuffer, BUFFER_SIZE_COLOR);
-						colorFrameReady = true;
+						DeviceActivators::colorFrameReady(true);
 					}
+
 				}
 
 				SafeRelease(colorFrameDescription);
 				SafeRelease(pColorFrame);
+
 			}
 			else{
-				colorFrameReady = false;
+				DeviceActivators::colorFrameReady(false);
 			}
+
+		
 				
 			///---------DEPTH FRAME
 			if (DeviceOptions::isEnableDepthFrame())
@@ -507,114 +546,231 @@ namespace KinectPV2{
 
 				if (SUCCEEDED(hr))
 				{
+					
 					hr = depthFrame->AccessUnderlyingBuffer(&nBufferSize, &pBuffer);
-					if (SUCCEEDED(hr) && pBuffer && !DeviceOptions::isEnablePointCloud()){
-						//uint32_t * depthFrameDataTemp = depthFrameData;
-						const UINT16* pBufferEnd = pBuffer + (frame_size_depth);
-						int depthIndex = 0;
+					
+					if (DeviceOptions::isEnableDepthFrame()){
+						if (SUCCEEDED(hr) && pBuffer){
 
-						while (pBuffer < pBufferEnd)
-						{
-							USHORT depth = *pBuffer;
-							BYTE intensity = static_cast<BYTE>((depth >= nDepthMinReliableDistance) && (depth <= nDepthMaxReliableDistance) ? (depth % 256) : 0);
-							depthRawData[depthIndex] = intensity;
-							depthData[depthIndex] = colorByte2Int((uint32_t)intensity);
-							++pBuffer;
-							++depthIndex;
-						}
-						//memcpy(depthData, depthFrameDataTemp, frame_size_depth * sizeof(uint32_t));
-						depthFrameReady = true;
-					}
-					if (SUCCEEDED(hr) && pBuffer && DeviceOptions::isEnablePointCloud() && kCoordinateMapper){
-
-						hr = kCoordinateMapper->MapDepthFrameToCameraSpace(frame_size_depth, pBuffer, frame_size_depth, mCamaraSpacePointDepth);
-						hr = kCoordinateMapper->MapCameraPointsToColorSpace(frame_size_depth, mCamaraSpacePointDepth, frame_size_depth, mColorSpacePoint);
-
-						if (SUCCEEDED(hr) && mCamaraSpacePointDepth != NULL){
 							const UINT16* pBufferEnd = pBuffer + (frame_size_depth);
 							int depthIndex = 0;
-							int cameraSpaceIndex = 0;
-							int indexColor = 0;
-
-							//std::cout << "passing" << std::endl;
 							while (pBuffer < pBufferEnd)
 							{
 								USHORT depth = *pBuffer;
 								BYTE intensity = static_cast<BYTE>((depth >= nDepthMinReliableDistance) && (depth <= nDepthMaxReliableDistance) ? (depth % 256) : 0);
 								depthRawData[depthIndex] = intensity;
-								//depthFrameDataTemp[depthIndex] = colorByte2Int((uint32_t)intensity);
 								depthData[depthIndex] = colorByte2Int((uint32_t)intensity);
-
-								float val = constrain(mCamaraSpacePointDepth[depthIndex].Z, 0.0f, 8.0f);
-								//[depthIndex] = val;
-
-
-								if (val > depthPCLowTh && val < depthPCHighTh){
-									pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointDepth[depthIndex].X;
-									pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointDepth[depthIndex].Y;
-									pointCloudPosData[cameraSpaceIndex++] = val;
-
-									float colVal = lmap(val, depthPCLowTh, depthPCHighTh, 0.0f, 1.0);
-									pointCloudDepthImage[depthIndex] = colorByte2Int(uint32_t(colVal * 255));
-
-									pointCloudDepthNormalized[depthIndex] = colVal;
-									//pointCloudDepthImage[depthIndex] = val;
-								}
-								else{
-									pointCloudPosData[cameraSpaceIndex++] = NULL;
-									pointCloudPosData[cameraSpaceIndex++] = NULL;
-									pointCloudPosData[cameraSpaceIndex++] = NULL;
-
-									pointCloudDepthImage[depthIndex] = colorByte2Int((uint32_t)0);
-									pointCloudDepthNormalized[depthIndex] = 0.0;
-									//pointCloudDepthImage[depthIndex] = NULL;
-								}
-
-								++pBuffer; //unsigned int
+								++pBuffer;
 								++depthIndex;
 							}
+							DeviceActivators::depthFrameReady(true);
+						}
 
-							//cout << "min: " << min << " max" << max << std::endl;
-							//std::cout << cameraSpaceIndex << std::endl;
-							depthPointCloudFrameReady = true;
-							depthFrameReady = true;
-							depthPointCloudImageReady = true;
+					}
+						
+					if (DeviceOptions::isEnablePointCloud() && kCoordinateMapper){
+					
+						if (SUCCEEDED(hr) && pBuffer){
+							hr = kCoordinateMapper->MapDepthFrameToCameraSpace(frame_size_depth, depthRawData, frame_size_depth, mCamaraSpacePointDepth);
+
+							//hr = kCoordinateMapper->MapCameraPointsToColorSpace(frame_size_depth, mCamaraSpacePointDepth, frame_size_depth, mColorSpacePoint);
+
+							if (SUCCEEDED(hr) && mCamaraSpacePointDepth != NULL){
+								int pBufferEnd = (frame_size_depth);
+								int depthIndex = 0;
+								int cameraSpaceIndex = 0;
+								int indexColor = 0;
+
+								while (depthIndex < pBufferEnd){
+	
+									float val = constrain(mCamaraSpacePointDepth[depthIndex].Z, 0.0f, 8.0f);
+									//[depthIndex] = val;
+
+									if (val > depthPCLowTh && val < depthPCHighTh){
+										pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointDepth[depthIndex].X;
+										pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointDepth[depthIndex].Y;
+										pointCloudPosData[cameraSpaceIndex++] = val;
+
+										float colVal = lmap(val, depthPCLowTh, depthPCHighTh, 0.0f, 1.0);
+										pointCloudDepthImage[depthIndex] = colorByte2Int(uint32_t(colVal * 255));
+
+										pointCloudDepthNormalized[depthIndex] = colVal;
+										//pointCloudDepthImage[depthIndex] = val;
+									}
+									else{
+										pointCloudPosData[cameraSpaceIndex++] = NULL;
+										pointCloudPosData[cameraSpaceIndex++] = NULL;
+										pointCloudPosData[cameraSpaceIndex++] = NULL;
+
+										pointCloudDepthImage[depthIndex] = colorByte2Int((uint32_t)0);
+										//pointCloudDepthImage[depthIndex] = NULL;
+									}
+
+									++pBuffer; //unsigned int
+									++depthIndex;
+								}
+
+								//cout << "min: " << min << " max" << max << std::endl;
+								//std::cout << cameraSpaceIndex << std::endl;
+
+								DeviceActivators::depthFrameReady(true);
+								DeviceActivators::depthPointCloudPosReady(true);
+								DeviceActivators::depthPointCloudImageReady(true);
+							}
 						}
 					}
 
-					if (SUCCEEDED(hr) && pBuffer && kCoordinateMapper && DeviceOptions::isEnablePointCloudColor())
-					{
-						hr = kCoordinateMapper->MapColorFrameToCameraSpace(frame_size_depth, pBuffer, frame_size_color, mCamaraSpacePointColor);
 
-						if (SUCCEEDED(hr) && mCamaraSpacePointColor != NULL){
-							int indexColor = 0;
-							int cameraSpaceIndex = 0;
-							//cout << "passing color" << std::endl;
-							while (indexColor < frame_size_depth)
-							{
-								pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].X;
-								pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].Y;
-								pointCloudPosData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].Z;
-
-								pointCloudDepthImage[indexColor] = mCamaraSpacePointColor[indexColor].Z;
-								++indexColor;
-								//cout << indexColor << std::endl;
+					//GetDepthFrameToCameraSpaceTable
+					if (activateMapDepthToCamaraTable){
+						if (kCoordinateMapper){
+							PointF* table = nullptr;
+							uint32_t count = 0;
+							hr = kCoordinateMapper->GetDepthFrameToCameraSpaceTable(&count, &table);
+							if (SUCCEEDED(hr)) {
+								std::cout << " mapper count" << count << std::endl;
+								int tableIndex = 0;
+								int mapIndex = 0;
+								int pBufferEnd = frame_size_depth;
+								while (tableIndex < pBufferEnd){
+									mapDepthCameraTableData[mapIndex * 2 + 0] = table[tableIndex].X;
+									mapDepthCameraTableData[mapIndex * 2 + 1] = table[tableIndex].Y;
+									mapIndex++;
+								}
 							}
-							colorPointCloudFrameReady = true;
 						}
+						activateMapDepthToCamaraTable = false;
+					}
+
+					//MAP Depth to Color
+					if (activateMapDepthToColor){
+						if (SUCCEEDED(hr) && pBuffer){
+							hr = kCoordinateMapper->MapDepthFrameToColorSpace(frame_size_depth, depthRawData, frame_size_depth, mDepthToColorPoints);
+
+							if (SUCCEEDED(hr)){
+								int  pBufferEnd =  (frame_size_depth);
+								int depthIndex = 0;
+								int cameraSpaceIndex = 0;
+
+								while (cameraSpaceIndex < pBufferEnd){
+									mapDepthToColorData[depthIndex++] = mDepthToColorPoints[cameraSpaceIndex].X;
+									mapDepthToColorData[depthIndex++] = mDepthToColorPoints[cameraSpaceIndex].Y;
+
+									++cameraSpaceIndex;
+								}
+							}
+						}
+						activateMapDepthToColor = false;
 					}
 				}
+
 				SafeRelease(depthFrameDescription);
 				SafeRelease(depthFrame);
 			}else{
-				depthFrameReady = false;
-				depthPointCloudFrameReady = false;
-				colorPointCloudFrameReady = false;
-				depthPointCloudImageReady = false;
+				DeviceActivators::depthFrameReady(false);
+				DeviceActivators::depthPointCloudPosReady(false);
+				DeviceActivators::depthPointCloudImageReady(false);
+			}
+			
+			//POINT CLOUDS
+			if (DeviceOptions::isEnablePointCloudColor())
+			{
+				IColorFrame* pColorFrame = NULL;
+				IFrameDescription* colorFrameDescription = NULL;
+				INT64 nTimeColor = 0;
+				int nWidth = 0;
+				int nHeight = 0;
+				ColorImageFormat imageFormat = ColorImageFormat_None;
+				UINT nBufferSizeColor = 0;
+				RGBQUAD *pBufferColor = NULL;
+				IColorFrameReference* frameColorRef = 0;
+
+				IDepthFrame* depthFrame = NULL;
+
+				INT64 nTimeDepth = 0;
+				IFrameDescription* depthFrameDescription = NULL;
+				int nWidthDepth = 0;
+				int nHeightDepth = 0;
+				USHORT nDepthMinReliableDistance = 0;
+				USHORT nDepthMaxReliableDistance = 0;
+				UINT nBufferSizeDepth = 0;
+				UINT16 *pBufferDepth = NULL;
+				IDepthFrameReference* frameDepthRef = 0;
+
+				hr = frame->get_ColorFrameReference(&frameColorRef);
+				if (SUCCEEDED(hr)) {
+					hr = frameColorRef->AcquireFrame(&pColorFrame);
+				}
+				SafeRelease(frameColorRef);
+
+
+				hr = frame->get_DepthFrameReference(&frameDepthRef);
+				if (SUCCEEDED(hr)) {
+					hr = frameDepthRef->AcquireFrame(&depthFrame);
+				}
+				SafeRelease(frameDepthRef);
+
+				//COLOR
+				if (SUCCEEDED(hr))
+				{
+					hr = pColorFrame->get_FrameDescription(&colorFrameDescription);
+				}
+
+				if (SUCCEEDED(hr))
+				{
+					//ColorImageFormat_Bgra  2073600 *4  = 8294400
+					pBufferColor = colorChannelsDataTemp;// new uint32_t[frame_size_color * 4];
+					hr = pColorFrame->CopyConvertedFrameDataToArray(BUFFER_SIZE_COLOR, reinterpret_cast<BYTE*>(pBufferColor), ColorImageFormat_Bgra);
+				}
+
+				//DEPTH
+				if (SUCCEEDED(hr))
+				{
+					hr = depthFrame->get_FrameDescription(&depthFrameDescription);
+				}
+
+				if (SUCCEEDED(hr))
+				{
+					hr = depthFrame->AccessUnderlyingBuffer(&nBufferSizeDepth, &pBufferDepth);
+				}
+
+				if (SUCCEEDED(hr) && pBufferDepth && pBufferColor && kCoordinateMapper)
+				{
+					hr = kCoordinateMapper->MapColorFrameToCameraSpace(frame_size_depth, reinterpret_cast<UINT16*>(depthRawData), frame_size_color, mCamaraSpacePointColor);
+
+					if (SUCCEEDED(hr) && mCamaraSpacePointColor != NULL){
+						int indexColor = 0;
+						int pixelColor = 0;
+						int cameraSpaceIndex = 0;
+						//cout << "passing color" << std::endl;
+						while (indexColor < frame_size_color)
+						{  //pixelsData
+							RGBQUAD  pSrc = pBufferColor[indexColor];
+
+							pointCloudColorData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].X;
+							pointCloudColorData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].Y;
+							pointCloudColorData[cameraSpaceIndex++] = mCamaraSpacePointColor[indexColor].Z;
+
+							colorChannelsData[pixelColor++] = pSrc.rgbRed   * 0.00390625;
+							colorChannelsData[pixelColor++] = pSrc.rgbGreen * 0.00390625;
+							colorChannelsData[pixelColor++] = pSrc.rgbBlue  * 0.00390625;
+							++indexColor;
+						}
+						DeviceActivators::colorPointCloudFrameReady(true);
+					}
+				}
+				SafeRelease(colorFrameDescription);
+				SafeRelease(pColorFrame);
+
+				SafeRelease(depthFrameDescription);
+				SafeRelease(depthFrame);
+			}
+			else{
+				DeviceActivators::colorPointCloudFrameReady(false);
 			}
 
 			//--------Infrared Exposure
-			if (DeviceOptions::isEnableInfraredExposureFrame())
+			if (DeviceOptions::isEnableLongExposureInfraredFrame())
 			{
 				ILongExposureInfraredFrame* infraredLongExposureFrame = 0;
 				INT64 nTime = 0;
@@ -661,19 +817,19 @@ namespace KinectPV2{
 						while (pBuffer < pBufferEnd)
 						{
 							USHORT ir = *pBuffer;
-							BYTE intensity = static_cast<BYTE>(ir >> 4);
+							BYTE intensity = static_cast<BYTE>(ir >> 8);
 							longExposureData[longExposureIndex] = colorByte2Int((uint32_t)intensity);
 							++pBuffer; //unsigned int
 							++longExposureIndex;
 						}
 						//memcpy(depthData, depthFrameDataTemp, frame_size_depth * sizeof(uint32_t));
-						longExposureReady = true;
+						DeviceActivators::infraredlongExposureReady(true);
 					}
 				}
 				SafeRelease(infraredLongExposureFrameDescription);
 				SafeRelease(infraredLongExposureFrame);
 			}else{
-				longExposureReady = false;
+				DeviceActivators::infraredlongExposureReady(false);
 			}
 
 				
@@ -730,18 +886,18 @@ namespace KinectPV2{
 							++pBuffer;
 							++depthIndex;
 						}
-						infraredFrameReady = true;
+						DeviceActivators::infraredFrameReady(true);
 					}
 				}
 				SafeRelease(infraredFrameDescription);
 				SafeRelease(infraredFrame);
 			}
 			else{
-				infraredFrameReady = false;
+				DeviceActivators::infraredFrameReady(false);
 			}
 
 			//---------- BODY TRACK
-			if (DeviceOptions::isEnableBodyTrack())
+			if (DeviceOptions::isEnableBodyIndex())
 			{
 				IBodyIndexFrame * bodyIndexFrame = 0;
 				IFrameDescription* bodyIndexFrameDescription = NULL;
@@ -781,46 +937,103 @@ namespace KinectPV2{
 
 				if (SUCCEEDED(hr))
 				{
+					//BODY MAPPING
 					if (SUCCEEDED(hr) && pBodyIndexBuffer != NULL && nBodyIndexWidth == cDepthWidth && nBodyIndexHeight == cDepthHeight)
 					{
 						const BYTE* pBufferEnd = pBodyIndexBuffer + (frame_size_depth);
+						
 						int bodyIndex = 0;
+						int bodyIndexColor = 0;
+
+						int bodyIndexCount = 0;
+						int bodyIndexCountPrev = 0;
+						int bodyColor = 0;
+
+						int sizeSortedArray = 0;
+						
+						std::set<int> tags;
+
 						while (pBodyIndexBuffer < pBufferEnd)
 						{
 							BYTE ir = *pBodyIndexBuffer;
-							uint32_t intensity;
-							if (ir == 0)
-								intensity = 0x0000ff;
-							else if (ir == 1)
-								intensity = 0x00ff00;
-							else if (ir == 2)
-								intensity = 0xff0000;
-							else if (ir == 3)
-								intensity = 0xffff00;
-							else if (ir == 4)
-								intensity = 0xff00ff;
-							else if (ir == 5)
-								intensity = 0x00ffff;
-							else if (ir == 6)
-								intensity = 0xffffff;
-							else
-								intensity = 0xFFFFFF;
 
-							//uint32_t color = ((ir / 32) << 5) + ((ir / 32) << 2) + (ir / 64);
-							bodyTrackData[bodyIndex] = intensity;// colorByte2Int((uint32_t)intensity);
+							//save index
+							bodyIndexCountPrev = bodyColor;
+							bodyColor = (uint32_t)ir;
+
+
+							if (bodyColor == 1)
+								bodyTackDataUser_1[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_1[bodyIndex] = 0x00000000;
+
+							if (bodyColor == 2)
+								bodyTackDataUser_2[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_2[bodyIndex] = 0x00000000;
+
+							if (bodyColor == 3)
+								bodyTackDataUser_3[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_3[bodyIndex] = 0x00000000;
+
+							if (bodyColor == 4)
+								bodyTackDataUser_4[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_4[bodyIndex] = 0x00000000;
+
+							if (bodyColor == 5)
+								bodyTackDataUser_5[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_5[bodyIndex] = 0x00000000;
+
+							if (bodyColor == 6)
+								bodyTackDataUser_6[bodyIndex] = bodyColors[bodyColor];
+							else
+								bodyTackDataUser_6[bodyIndex] = 0x00000000;
+
+							/*
+							//save bodycolor
+							if (bodyIndex % 10 == 0){
+								if (bodyColor > 0 && bodyColor <= 6){
+									if (bodyIndexCountPrev != bodyColor){
+										if (sizeSortedArray < numberUsers){
+											tags.insert(bodyColor);
+											std::set<int> arraySort(tags.begin(), tags.end());
+											sizeSortedArray = arraySort.size();
+
+
+											int i = 0;
+											for (auto it = arraySort.begin(); it != arraySort.end(); ++it){
+												int at = *it;
+												std::cout << " index: " << i << " value: " << at;
+												i++;
+											}
+											std::cout << "-" << tags.size() << std::endl;
+
+										}
+										else{
+											bodyColor = 6;
+										}
+									}
+								}
+							}
+							*/
+						//	tags.clear();
+							
+							bodyIndexData[bodyIndex] = bodyColors[bodyColor];// [bodyCounter];// colorByte2Int((uint32_t)intensity);
 							++pBodyIndexBuffer; //(unsigned int)
 							++bodyIndex;
 						}
 						//memcpy(infraredData, inFraredFrameDataTemp, frame_size_depth * sizeof(uint32_t));
-						bodyIndexReady = true;
+						DeviceActivators::bodyIndexReady(true);
 					}
 				}
 				SafeRelease(bodyIndexFrameDescription);
 				SafeRelease(bodyIndexFrame);
 			}
 			else{
-				bodyIndexReady = false;
-				depthMaskReady = false;
+				DeviceActivators::bodyIndexReady(false);
 			}
 
 
@@ -932,7 +1145,7 @@ namespace KinectPV2{
 
 					if (SUCCEEDED(hr))
 					{
-						pColorBuffer = colorFrameData;
+						pColorBuffer = pixelsDataTemp;
 						hr = pColorFrame->CopyConvertedFrameDataToArray(BUFFER_SIZE_COLOR, reinterpret_cast<BYTE*>(pColorBuffer), ColorImageFormat_Bgra);
 					}
 
@@ -956,7 +1169,6 @@ namespace KinectPV2{
 					{
 						hr = pBodyIndexFrame->AccessUnderlyingBuffer(&nBodyIndexBufferSize, &pBodyIndexBuffer);
 					}
-
 
 					HRESULT hr = kCoordinateMapper->MapColorFrameToDepthSpace(nDepthWidth * nDepthHeight, (UINT16*)pDepthBuffer, nColorWidth * nColorHeight, mDepthCoordinates);
 					if (SUCCEEDED(hr))
@@ -998,10 +1210,10 @@ namespace KinectPV2{
 							outCoordMapperRGBX[colorIndeRGB++] = *(pSrc++);
 							colorIndex++;
 						}
-						coordinateRGBXReady = true;
+						DeviceActivators::coordinateRGBXReady(false);
 					}
 					else{
-						coordinateRGBXReady = false;
+						DeviceActivators::coordinateRGBXReady(false);
 					}
 					SafeRelease(pDepthFrameDescription);
 					SafeRelease(pColorFrameDescription);
@@ -1056,9 +1268,11 @@ namespace KinectPV2{
 				{
 					const BYTE* pBufferEnd = pBodyIndexBuffer + (frame_size_depth);
 					int depthMaskIndex = 0;
+
 					while (pBodyIndexBuffer < pBufferEnd)
 					{
 						BYTE ir = int(*pBodyIndexBuffer);
+					
 						uint32_t intensity;
 						if (ir == 0)
 							intensity = 0x0000ff;
@@ -1082,14 +1296,14 @@ namespace KinectPV2{
 						++depthMaskIndex;
 					}
 					//memcpy(infraredData, inFraredFrameDataTemp, frame_size_depth * sizeof(uint32_t));
-					depthMaskReady = true;
+					DeviceActivators::bodyIndexDephReady(true);
 				}
 
 				SafeRelease(bodyIndexFrameDescription);
 				SafeRelease(bodyIndexFrame);
 			}
 			else{
-				depthMaskReady = false;
+				DeviceActivators::bodyIndexDephReady(false);
 			}
 
 				
@@ -1134,9 +1348,10 @@ namespace KinectPV2{
 						{
 							//faceDetectionReady = false;
 							IFaceFrameResult* pFaceFrameResult = nullptr;
-							RectI faceBox = { 0 };
+							RectI faceBoxColor = { 0 };
+							RectI faceBoxInFrared = { 0 };
 							PointF facePointsColor[FacePointType::FacePointType_Count];
-							PointF facePointsDepth[FacePointType::FacePointType_Count];
+							PointF facePointsInFrared[FacePointType::FacePointType_Count];
 							Vector4 faceRotation;
 							DetectionResult faceProperties[FaceProperty::FaceProperty_Count];
 
@@ -1145,12 +1360,13 @@ namespace KinectPV2{
 							// need to verify if pFaceFrameResult contains data before trying to access it
 							if (SUCCEEDED(hr) && pFaceFrameResult != nullptr)
 							{
-								hr = pFaceFrameResult->get_FaceBoundingBoxInColorSpace(&faceBox);
+								hr = pFaceFrameResult->get_FaceBoundingBoxInColorSpace(&faceBoxColor);
+								hr = pFaceFrameResult->get_FaceBoundingBoxInInfraredSpace(&faceBoxInFrared);
 
 								if (SUCCEEDED(hr))
 								{
 									hr = pFaceFrameResult->GetFacePointsInColorSpace(FacePointType::FacePointType_Count, facePointsColor);
-									hr = pFaceFrameResult->GetFacePointsInInfraredSpace(FacePointType::FacePointType_Count, facePointsDepth);
+									hr = pFaceFrameResult->GetFacePointsInInfraredSpace(FacePointType::FacePointType_Count, facePointsInFrared);
 								}
 
 								if (SUCCEEDED(hr))
@@ -1165,33 +1381,46 @@ namespace KinectPV2{
 
 								if (SUCCEEDED(hr))
 								{
-									faceData[iFace * 36 + 35] = 1.0;
+									faceDataColor[iFace * 36 + 35] = 1.0;
+									faceDataInInfrared[iFace * 36 + 35] = 1.0;
 
 									for (int j = 0; j < FacePointType::FacePointType_Count; j++){
-										faceData[iFace * 36 + j * 2 + 0] = facePointsColor[j].X;
-										faceData[iFace * 36 + j * 2 + 1] = facePointsColor[j].Y;
+										faceDataColor[iFace * 36 + j * 2 + 0] = facePointsColor[j].X;
+										faceDataColor[iFace * 36 + j * 2 + 1] = facePointsColor[j].Y;
 										//cout << facePoints[j].X << " " << facePoints[j].Y << std::endl;
 									}
 
 									for (int j = 0; j < FacePointType::FacePointType_Count; j++){
-										faceData[iFace * 36 + j * 2 + 10 + 0] = facePointsDepth[j].X;
-										faceData[iFace * 36 + j * 2 + 10 + 1] = facePointsDepth[j].Y;
+										faceDataInInfrared[iFace * 36 + j * 2  + 0] = facePointsInFrared[j].X;
+										faceDataInInfrared[iFace * 36 + j * 2  + 1] = facePointsInFrared[j].Y;
 										//cout << facePoints[j].X << " " << facePoints[j].Y << std::endl;
 									}
 
-									faceData[iFace * 36 + 20 + 0] = faceBox.Left;
-									faceData[iFace * 36 + 20 + 1] = faceBox.Top;
-									faceData[iFace * 36 + 20 + 2] = faceBox.Right - faceBox.Left;
-									faceData[iFace * 36 + 20 + 3] = faceBox.Bottom - faceBox.Top;
+									//OPTIMIZE PRODUCT INDEX
+									int index = iFace * 36 + 20;
+
+									faceDataColor[index + 0] = faceBoxColor.Left;
+									faceDataColor[index + 1] = faceBoxColor.Top;
+									faceDataColor[index + 2] = faceBoxColor.Right - faceBoxColor.Left;
+									faceDataColor[index + 3] = faceBoxColor.Bottom - faceBoxColor.Top;
+
+									faceDataInInfrared[index + 0] = faceBoxInFrared.Left;
+									faceDataInInfrared[index + 1] = faceBoxInFrared.Top;
+									faceDataInInfrared[index + 2] = faceBoxInFrared.Right - faceBoxInFrared.Left;
+									faceDataInInfrared[index + 3] = faceBoxInFrared.Bottom - faceBoxInFrared.Top;
 
 									int pitch, yaw, roll;
 									ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
 
-									faceData[iFace * 36 + 20 + 4] = pitch;
-									faceData[iFace * 36 + 20 + 5] = yaw;
-									faceData[iFace * 36 + 20 + 6] = roll;
+									faceDataColor[index + 4] = pitch;
+									faceDataColor[index + 5] = yaw;
+									faceDataColor[index + 6] = roll;
 
-									int index = iFace * 36 + 20 + 7;
+									faceDataInInfrared[index + 4] = pitch;
+									faceDataInInfrared[index + 5] = yaw;
+									faceDataInInfrared[index + 6] = roll;
+
+									index = index + 7;
 									for (int iProperty = 0; iProperty < FaceProperty::FaceProperty_Count; iProperty++)
 									{
 										int iPro = 0;
@@ -1226,14 +1455,17 @@ namespace KinectPV2{
 										switch (faceProperties[iProperty])
 										{
 										case DetectionResult::DetectionResult_Unknown:
-											faceData[index + iPro] = -1;
+											faceDataColor[index + iPro] = -1;
+											faceDataInInfrared[index + iPro] = -1;
 											break;
 										case DetectionResult::DetectionResult_Yes:
-											faceData[index + iPro] = 1;
+											faceDataColor[index + iPro] = 1;
+											faceDataInInfrared[index + iPro] = 1;
 											break;
 										case DetectionResult::DetectionResult_No:
 										case DetectionResult::DetectionResult_Maybe:
-											faceData[index + iPro] = 0;
+											faceDataColor[index + iPro] = 0;
+											faceDataInInfrared[index + iPro] = 0;
 											break;
 										}
 									}
@@ -1245,7 +1477,8 @@ namespace KinectPV2{
 						}
 						else
 						{
-							faceData[iFace * 36 + 35] = 0.0;
+							faceDataColor[iFace * 36 + 35] = 0.0;
+							faceDataInInfrared[iFace * 36 + 35] = 0.0;
 							if (bHaveBodyData)
 							{
 								// check if the corresponding body is tracked
@@ -1273,13 +1506,13 @@ namespace KinectPV2{
 						}
 						SafeRelease(pFaceFrame);
 					}
-					faceDetectionReady = true;
+					DeviceActivators::faceDetectionReady(true);
 				}
 
 				SafeRelease(bodyFrame);
 			}
 
-
+			//ENABLE SKELETON
 			if (DeviceOptions::isEnableSkeleton())
 			{
 
@@ -1292,174 +1525,107 @@ namespace KinectPV2{
 				}
 				SafeRelease(frameRef);
 
-				if (SUCCEEDED(hr)) {
+				if (SUCCEEDED(hr)) 
+				{
 					IBody* ppBodies[BODY_COUNT] = { 0 };
 					int64_t bodyTime = 0L;
 					hr = bodyFrame->GetAndRefreshBodyData(BODY_COUNT, ppBodies);
 				
-					if (SUCCEEDED(hr)) {
-						if (DeviceOptions::isEnableSkeletonDepthMap()){
-							for (int i = 0; i < BODY_COUNT; ++i){
-								IBody* pBody = ppBodies[i];
-								if (pBody) //[6][25][3]
+					if (SUCCEEDED(hr))
+					{
+						for (int i = 0; i < BODY_COUNT; ++i){
+							IBody* pBody = ppBodies[i];
+							if (pBody) //[6][25][3]
+							{
+								BOOLEAN bTracked = false;
+								hr = pBody->get_IsTracked(&bTracked);
+
+								if (SUCCEEDED(hr) && bTracked)
 								{
-									BOOLEAN bTracked = false;
-									hr = pBody->get_IsTracked(&bTracked);
+									int indexID = i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1;
+									skeletonDataDepthMap[indexID] = 1.0;
+									skeletonDataColorMap[indexID] = 1.0;
+									skeletonData3dMap[indexID] = 1.0;
 
-									if (SUCCEEDED(hr) && bTracked)
+									Joint jointsTracked[JointType_Count];
+									HandState leftHandState = HandState_Unknown;
+									HandState rightHandState = HandState_Unknown;
+
+									pBody->get_HandLeftState(&leftHandState);
+									pBody->get_HandRightState(&rightHandState);
+
+									hr = pBody->GetJoints(_countof(jointsTracked), jointsTracked);
+
+									if (SUCCEEDED(hr))
 									{
-										skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = 1.0;
-										Joint jointsTracked[JointType_Count];
-										HandState leftHandState = HandState_Unknown;
-										HandState rightHandState = HandState_Unknown;
+										JointOrientation jointOrientations[_countof(jointsTracked)];
+										hr = pBody->GetJointOrientations(_countof(jointsTracked), jointOrientations);
 
-										pBody->get_HandLeftState(&leftHandState);
-										pBody->get_HandRightState(&rightHandState);
-
-										hr = pBody->GetJoints(_countof(jointsTracked), jointsTracked);
 										if (SUCCEEDED(hr))
 										{
+											//cout << "starting loop skeleton" << std::endl;
 											for (int j = 0; j < _countof(jointsTracked); ++j)
 											{
-												float * pointScreen = BodyToScreenDepth(jointsTracked[j].Position);
-												skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 0] = pointScreen[0];
-												skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 1] = pointScreen[1];
-												skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 2] = pointScreen[2];
+												int index = i*(JointType_Count + 1) * 9 + j * 9;
 
-												if (jointsTracked[j].JointType == JointType_HandLeft)
-													skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = leftHandState;
-												else if (jointsTracked[j].JointType == JointType_HandRight)
-													skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = rightHandState;
-												else
-													skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = jointsTracked[j].TrackingState;
-												skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + j * 9 + 8] = jointsTracked[j].JointType;
-											}
-										}
-									}
-									else{
-										skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
-									}
-								}
-								else{
-									skeletonDataDepthMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
-								}
-							}
-							skeletonDepthReady = true;
-						}
+												//DEPTH
+												float * pointScreenDepth = BodyToScreenDepth(&jointsTracked[j].Position);
+												skeletonDataDepthMap[index + 0] = pointScreenDepth[0];
+												skeletonDataDepthMap[index + 1] = pointScreenDepth[1];
+												skeletonDataDepthMap[index + 2] = 0.0;
 
-						if (DeviceOptions::isEnableSkeletonColorMap()){
-							for (int i = 0; i < BODY_COUNT; ++i){
-								IBody* pBody = ppBodies[i];
-								if (pBody) //[6][25][3]
-								{
-									BOOLEAN bTracked = false;
-									hr = pBody->get_IsTracked(&bTracked);
+												//COLOR
+												float * pointScreenColor = BodyToScreenColor(&jointsTracked[j].Position);
+												skeletonDataColorMap[index + 0] = pointScreenColor[0];
+												skeletonDataColorMap[index + 1] = pointScreenColor[1];
+												skeletonDataColorMap[index + 2] = 0.0;
 
-									if (SUCCEEDED(hr) && bTracked)
-									{
-										skeletonDataColorMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = 1.0;
-										Joint jointsTracked[JointType_Count];
-										HandState leftHandState = HandState_Unknown;
-										HandState rightHandState = HandState_Unknown;
+												//3D
+												skeletonData3dMap[index + 0] = jointsTracked[j].Position.X;
+												skeletonData3dMap[index + 1] = jointsTracked[j].Position.Y;
+												skeletonData3dMap[index + 2] = jointsTracked[j].Position.Z;
+												skeletonData3dMap[index + 3] = jointOrientations[j].Orientation.w;
+												skeletonData3dMap[index + 4] = jointOrientations[j].Orientation.x;
+												skeletonData3dMap[index + 5] = jointOrientations[j].Orientation.y;
+												skeletonData3dMap[index + 6] = jointOrientations[j].Orientation.z;
 
-										pBody->get_HandLeftState(&leftHandState);
-										pBody->get_HandRightState(&rightHandState);
-
-										hr = pBody->GetJoints(_countof(jointsTracked), jointsTracked);
-										if (SUCCEEDED(hr))
-										{
-											for (int j = 0; j < _countof(jointsTracked); ++j)
-											{
-												float * pointScreen = BodyToScreenColor(jointsTracked[j].Position);
-												skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 0] = pointScreen[0];
-												skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 1] = pointScreen[1];
-												skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 2] = pointScreen[2];
-
-												if (jointsTracked[j].JointType == JointType_HandLeft)
-													skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = leftHandState;
-												else if (jointsTracked[j].JointType == JointType_HandRight)
-													skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = rightHandState;
-												else
-													skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = jointsTracked[j].TrackingState;
-												skeletonDataColorMap[i*(JointType_Count + 1) * 9 + j * 9 + 8] = jointsTracked[j].JointType;
-											}
-										}
-									}
-									else{
-										skeletonDataColorMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
-									}
-								}
-								else{
-									skeletonDataColorMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
-								}
-							}
-							skeletonColorReady = true;
-						}
-
-						if (DeviceOptions::isEnableSkeleton3dMap()){
-							for (int i = 0; i < BODY_COUNT; ++i){
-								IBody* pBody = ppBodies[i];
-								if (pBody) //[6][25][3]
-								{
-									BOOLEAN bTracked = false;
-									hr = pBody->get_IsTracked(&bTracked);
-
-									if (SUCCEEDED(hr) && bTracked)
-									{
-										skeletonData3dMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = 1.0;
-										Joint jointsTracked[JointType_Count];
-										HandState leftHandState = HandState_Unknown;
-										HandState rightHandState = HandState_Unknown;
-
-										pBody->get_HandLeftState(&leftHandState);
-										pBody->get_HandRightState(&rightHandState);
-
-										hr = pBody->GetJoints(_countof(jointsTracked), jointsTracked);
-										if (SUCCEEDED(hr))
-										{
-											JointOrientation jointOrientations[_countof(jointsTracked)];
-											hr = pBody->GetJointOrientations(_countof(jointsTracked), jointOrientations);
-											if (SUCCEEDED(hr)){
-												for (int j = 0; j < _countof(jointsTracked); ++j)
-												{
-
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 0] = jointsTracked[j].Position.X;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 1] = jointsTracked[j].Position.Y;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 2] = jointsTracked[j].Position.Z;
-
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 3] = jointOrientations[j].Orientation.w;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 4] = jointOrientations[j].Orientation.x;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 5] = jointOrientations[j].Orientation.y;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 6] = jointOrientations[j].Orientation.z;
-
-													if (jointsTracked[j].JointType == JointType_HandLeft){
-														skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = leftHandState;
-													}
-													else if (jointsTracked[j].JointType == JointType_HandRight)
-														skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = rightHandState;
-													else
-														skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 7] = jointsTracked[j].TrackingState;
-													skeletonData3dMap[i*(JointType_Count + 1) * 9 + j * 9 + 8] = jointsTracked[j].JointType;
+												//HAND STATE
+												if (jointsTracked[j].JointType == JointType_HandLeft){
+													skeletonDataDepthMap[index + 7] = skeletonData3dMap[index + 7] = skeletonDataColorMap[index + 7] = leftHandState;
 												}
+												else if (jointsTracked[j].JointType == JointType_HandRight){
+													skeletonDataDepthMap[index + 7] = skeletonData3dMap[index + 7] = skeletonDataColorMap[index + 7] = rightHandState;
+												}
+												else{
+													skeletonDataDepthMap[index + 7] = skeletonData3dMap[index + 7] = skeletonDataColorMap[index + 7] = jointsTracked[j].TrackingState;
+												}
+
+												skeletonDataDepthMap[index + 8] = skeletonData3dMap[index + 8] = skeletonDataColorMap[index + 8] = jointsTracked[j].JointType;
+												//std::cout << "copy skeleton loop" << std::endl;
 											}
 										}
 									}
-									else{
-										skeletonData3dMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
-									}
-								}
-								else{
-									skeletonData3dMap[i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1] = -1.0;
+								}else{
+									int index = i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1;
+									skeletonDataDepthMap[index] = -1.0;
+									skeletonDataColorMap[index] = -1.0;
+									skeletonData3dMap[index] = -1.0;
 								}
 							}
-							skeleton3dReady = true;
-						} //END 3D MAP
-
-						for (int i = 0; i < _countof(ppBodies); ++i){
-							SafeRelease(ppBodies[i]);
+							else{
+								int index = i*(JointType_Count + 1) * 9 + (JointType_Count + 1) * 9 - 1;
+								skeletonDataDepthMap[index] = -1.0;
+								skeletonDataColorMap[index] = -1.0;
+								skeletonData3dMap[index] = -1.0;
+							}
 						}
-
 					}
+
+					for (int i = 0; i < _countof(ppBodies); ++i){
+						SafeRelease(ppBodies[i]);
+					}
+
+					DeviceActivators::skeletonReady(true);
 				}
 
 				SafeRelease(bodyFrame);
@@ -1564,16 +1730,9 @@ namespace KinectPV2{
 										hr = kCoordinateMapper->MapCameraPointToColorSpace(facePoints[point], &colorSpacePoint);
 										if (SUCCEEDED(hr))
 										{
-											//int x = static_cast<int>(colorSpacePoint.X);
-											//int y = static_cast<int>(colorSpacePoint.Y);
 
 											hdFaceVertex[count*hdFaceVertexCount * 2 + point * 2 + 0] = colorSpacePoint.X;
 											hdFaceVertex[count*hdFaceVertexCount * 2 + point * 2 + 1] = colorSpacePoint.Y;
-
-											//cout << "sending" << std::endl;
-											//if ((x >= 0) && (x < width) && (y >= 0) && (y < height)){
-											//	cv::circle(bufferMat, cv::Point(static_cast<int>(colorSpacePoint.X), static_cast<int>(colorSpacePoint.Y)), 5, static_cast<cv::Scalar>(color[count]), -1, CV_AA);
-											//}
 										}
 									}
 								}
@@ -1585,9 +1744,9 @@ namespace KinectPV2{
 					}
 					SafeRelease(pHDFaceFrame);
 				}
-				hdFaceDetectionReady = true;
+				DeviceActivators::HDFaceDetectionReady(true);
 			}
-
+		
 
 		//END OF SUCCED HR MULTIFRAME
 		}
@@ -1609,25 +1768,25 @@ namespace KinectPV2{
 	}
 
 	
-	float * Device::BodyToScreenDepth(const CameraSpacePoint& bodyPoint)
+	float * Device::BodyToScreenDepth(const CameraSpacePoint * bodyPoint)
 	{
 		float pointsScreen[2];
 		// Calculate the body's position on the screen
 		DepthSpacePoint depthPoint = { 0 };
-		kCoordinateMapper->MapCameraPointToDepthSpace(bodyPoint, &depthPoint);
+		kCoordinateMapper->MapCameraPointToDepthSpace(*bodyPoint, &depthPoint);
 
 		pointsScreen[0] = depthPoint.X;
 		pointsScreen[1] = depthPoint.Y;
 		return pointsScreen;
 	}
 
-	float * Device::BodyToScreenColor(const CameraSpacePoint& bodyPoint)
+	float * Device::BodyToScreenColor(const CameraSpacePoint * bodyPoint)
 	{
 		float pointsScreen[2];
 		// Calculate the body's position on the screen
 		ColorSpacePoint colorPoint = { 0 };
 
-		kCoordinateMapper->MapCameraPointToColorSpace(bodyPoint, &colorPoint);
+		kCoordinateMapper->MapCameraPointToColorSpace(*bodyPoint, &colorPoint);
 
 		pointsScreen[0] = colorPoint.X;
 		pointsScreen[1] = colorPoint.Y;
@@ -1680,10 +1839,37 @@ namespace KinectPV2{
 		*pRoll = static_cast<int>((dRoll + increment / 2.0 * (dRoll > 0 ? 1.0 : -1.0)) / increment) * static_cast<int>(increment);
 	}
 
+	uint32_t  Device::getColorMaskUser(BYTE ir)
+	{
+		uint32_t intensity = 0xFFFFFF;
+
+		if (ir == 0)
+			return 0x0000ff;
+		else if (ir == 1)
+			return 0x00ff00;
+		else if (ir == 2)
+			return 0xff0000;
+		else if (ir == 3)
+			return 0xffff00;
+		else if (ir == 4)
+			return 0xff00ff;
+		else if (ir == 5)
+			return 0x00ffff;
+		else
+			return 0xFFFFFF;
+
+		return intensity;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	uint8_t * Device::JNI_GetImage()
 	{
 		return pixelsData;
+	}
+
+	float * Device::JNI_GetColorChannels()
+	{
+		return colorChannelsData;
 	}
 
 	uint32_t * Device::JNI_GetDepth()
@@ -1696,14 +1882,14 @@ namespace KinectPV2{
 		return depthMaskData;
 	}
 
-	uint32_t * Device::JNI_GetDepthRawData()
+	uint16_t * Device::JNI_GetDepthRawData()
 	{
 		return depthRawData;
 	}
 
 	uint32_t * Device::JNI_GetDepthSha()
 	{
-		uint32_t * newInt = depthData;
+		uint32_t * newInt = (uint32_t *)depthData;
 		return newInt;
 	}
 
@@ -1719,7 +1905,7 @@ namespace KinectPV2{
 
 	uint32_t * Device::JNI_GetBodyTrack()
 	{
-		return bodyTrackData;
+		return bodyIndexData;
 	}
 
 	uint8_t * Device::JNI_GetCoodinateRGBX()
@@ -1762,9 +1948,14 @@ namespace KinectPV2{
 		return pointCloudDepthNormalized;
 	}
 
-	float * Device::JNI_getFaceRawData()
+	float * Device::JNI_getFaceColorRawData()
 	{
-		return faceData;
+		return faceDataColor;
+	}
+
+	float * Device::JNI_getFaceInfraredRawData()
+	{
+		return faceDataInInfrared;
 	}
 
 	float * Device::JNI_getHDFaceVertexRawData()
@@ -1772,4 +1963,39 @@ namespace KinectPV2{
 		return hdFaceVertex;
 	}
 
+	float * Device::JNI_getMapDepthToCameraTable()
+	{
+		return mapDepthCameraTableData;
+	}
+
+
+	float *	Device::JNI_getMapDepthToColor()
+	{
+		return mapDepthToColorData;
+	}
+
+	uint32_t *	Device::JNI_getBodyIndexUser(int index)
+	{
+		switch (index){
+		case 1:
+			return bodyTackDataUser_1;
+			break;
+		case 2:
+			return bodyTackDataUser_2;
+			break;
+		case 3:
+			return bodyTackDataUser_3;
+			break;
+		case 4:
+			return bodyTackDataUser_4;
+			break;
+		case 5:
+			return bodyTackDataUser_5;
+			break;
+		case 6:
+			return bodyTackDataUser_6;
+			break;
+		}
+		return bodyTackDataUser_1;
+	}
 }

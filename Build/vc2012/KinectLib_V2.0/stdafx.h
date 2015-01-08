@@ -32,14 +32,17 @@ inline void SafeRelease(T *& pInterfaceToRelease)
 template<typename T>
 inline void SafeArrayDelete(T*& pArray)
 {
-	delete[] pArray;
-	pArray = nullptr;
+	if (pArray != NULL){
+		delete[] pArray;
+		pArray = nullptr;
+	}
 }
 
-
 template<typename T>
-inline void SafeDelete(T*& pObject)
+inline void SafeDeletePointer(T*& pointer)
 {
-	delete pObject;
-	pObject = nullptr;
+	if (pointer != NULL){
+		free(pointer);
+		(pointer) = NULL;
+	}
 }

@@ -1,0 +1,47 @@
+﻿Build started 1/8/2015 2:49:33 PM.
+     1>Project "C:\Users\thomas\Documents\Programacion\K2W\KinectProcessing\KinectLib_V2.0_0.4\KinectLib_V2.0\KinectLib_V2.0.vcxproj" on node 2 (Build target(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\Microsoft.CppBuild.targets(346,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\\inc" /I"C:\Program Files\Java\jdk1.8.0_05\include" /I"C:\Program Files\Java\jdk1.8.0_05\include\win32" /IKinect20.lib /Zi /nologo /W3 /WX- /sdl /O2 /Oi /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D KINECTLIB_V20_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"x64\Release\KinectPV2.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt KinectPV2.cpp
+         KinectPV2.cpp
+     1>KinectPV2.cpp(282): warning C4305: 'return' : truncation from 'int' to 'bool'
+     1>KinectPV2.cpp(289): warning C4305: 'return' : truncation from 'int' to 'bool'
+     1>KinectPV2.cpp(754): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>KinectPV2.cpp(755): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>KinectPV2.cpp(756): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>KinectPV2.cpp(1402): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1403): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1404): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1405): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1407): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1408): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1409): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1410): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+     1>KinectPV2.cpp(1415): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1416): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1417): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1419): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1420): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1421): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>KinectPV2.cpp(1594): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+     1>KinectPV2.cpp(1597): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+     1>KinectPV2.cpp(1600): warning C4244: '=' : conversion from 'TrackingState' to 'float', possible loss of data
+     1>KinectPV2.cpp(1603): warning C4244: '=' : conversion from 'JointType' to 'float', possible loss of data
+     1>KinectPV2.cpp(1727): warning C4018: '<' : signed/unsigned mismatch
+     1>KinectPV2.cpp(1780): warning C4172: returning address of local variable or temporary
+     1>KinectPV2.cpp(1793): warning C4172: returning address of local variable or temporary
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\\Lib\x64" kinect20.lib Kinect20.Face.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.lib" /MACHINE:X64 /DLL x64\Release\dllmain.obj
+         x64\Release\KinectLib_V2.0.obj
+         x64\Release\KinectV2_JNI_Device.obj
+         x64\Release\KinectPV2.obj
+         x64\Release\stdafx.obj
+            Creating library C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.lib and object C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.exp
+         Generating code
+         Finished generating code
+         KinectLib_V2.0.vcxproj -> C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.dll
+     1>Done Building Project "C:\Users\thomas\Documents\Programacion\K2W\KinectProcessing\KinectLib_V2.0_0.4\KinectLib_V2.0\KinectLib_V2.0.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.73

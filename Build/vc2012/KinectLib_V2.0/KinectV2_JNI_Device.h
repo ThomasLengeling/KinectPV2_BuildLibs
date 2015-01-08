@@ -58,6 +58,14 @@ extern "C" {
 
 	/*
 	* Class:     KinectPV2_Device
+	* Method:    jniEnableColorChannelsFrame
+	* Signature: (Z)V
+	*/
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableColorChannelsFrame
+		(JNIEnv *, jobject, jboolean);
+
+	/*
+	* Class:     KinectPV2_Device
 	* Method:    jniEnableDepthFrame
 	* Signature: (Z)V
 	*/
@@ -106,27 +114,27 @@ extern "C" {
 
 	/*
 	* Class:     KinectPV2_Device
-	* Method:    jniEnableSkeletonColorMap
-	* Signature: (Z)V
+	* Method:    jniSendCoordinateBkg
+	* Signature: ([I)V
 	*/
-	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableSkeletonColorMap
-		(JNIEnv *, jobject, jboolean);
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniSendCoordinateBkg
+		(JNIEnv *, jobject, jintArray);
 
 	/*
 	* Class:     KinectPV2_Device
-	* Method:    jniEnableSkeletonDepthMap
-	* Signature: (Z)V
+	* Method:    jniSendCoordinateDepth
+	* Signature: ([I)V
 	*/
-	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableSkeletonDepthMap
-		(JNIEnv *, jobject, jboolean);
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniSendCoordinateDepth
+		(JNIEnv *, jobject, jintArray);
 
 	/*
 	* Class:     KinectPV2_Device
-	* Method:    jniEnableSkeleton3dMap
-	* Signature: (Z)V
+	* Method:    jniSetNumberOfUsers
+	* Signature: (I)V
 	*/
-	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableSkeleton3dMap
-		(JNIEnv *, jobject, jboolean);
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniSetNumberOfUsers
+		(JNIEnv *, jobject, jint);
 
 	/*
 	* Class:     KinectPV2_Device
@@ -151,16 +159,6 @@ extern "C" {
 	*/
 	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableCoordinateMappingRGBDepth
 		(JNIEnv *, jobject, jboolean);
-
-
-	/*
-	* Class:     KinectPV2_Device
-	* Method:    jniSendArrayInts
-	* Signature: ([II)V
-	*/
-	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniSendArrayInts
-		(JNIEnv *, jobject, jintArray);
-
 
 	/*
 	* Class:     KinectPV2_Device
@@ -209,6 +207,68 @@ extern "C" {
 	*/
 	JNIEXPORT jfloat JNICALL Java_KinectPV2_Device_jniGetHighThresholdDepthPC
 		(JNIEnv *, jobject);
+
+	/*
+	* Class:     KinectPV2_Device
+	* Method:    jniEnableMapDethCamaraTable
+	* Signature: ()[F
+	*/
+	JNIEXPORT jfloatArray JNICALL Java_KinectPV2_Device_jniEnableMapDethCamaraTable
+		(JNIEnv *, jobject);
+
+	/*
+	* Class:     KinectPV2_Device
+	* Method:    jniEnableMapDethToColorSpace
+	* Signature: ()[F
+	*/
+	JNIEXPORT jfloatArray JNICALL Java_KinectPV2_Device_jniEnableMapDethToColorSpace
+		(JNIEnv *, jobject);
+
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniColorReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniDepthReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniInfraredReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniBodyIndexReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniInfraredLongExposureReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniSkeletonReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniDepthMaskBodyIndexReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniFaceDetectionReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniHDFaceVertexReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniPointColorReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL Java_KinectPV2_Device_jniDepthPointCloudImageReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+
+	JNIEXPORT void JNICALL  Java_KinectPV2_Device_jniPointCoudPosReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+	JNIEXPORT void JNICALL  Java_KinectPV2_Device_jniCoordinateMapperReadyCopy
+		(JNIEnv *, jobject, jboolean);
+
+
+	JNIEXPORT jintArray JNICALL  Java_KinectPV2_Device_jniGetBodyIndexUser
+		(JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

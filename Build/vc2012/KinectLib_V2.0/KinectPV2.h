@@ -38,16 +38,19 @@ along with KinectfV2.0 library for Processing.  If not, see
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <set>
 
 #include "ole2.h"
 
-
 #include "Kinect.h"
 #include "Kinect.Face.h"
+#include "DeviceActivators.h"
+#include "DeviceOptions.h"
 
 #define M_PI 3.14159265358979323846
 
-#define VERSION			"0.7.0"
+#define VERSION			"0.7.3"
 
 static const int         cColorWidth = 1920;
 static const int         cColorHeight = 1080;
@@ -55,8 +58,9 @@ static const int         cColorHeight = 1080;
 static const int         cDepthWidth = 512;
 static const int         cDepthHeight = 424;
 
-#define frame_size_color 2073600
-#define frame_size_depth 217088
+#define frame_size_color  2073600
+
+#define frame_size_depth  217088
 
 static const int BUFFER_SIZE_COLOR = frame_size_color * 4;
 
@@ -70,137 +74,22 @@ static const int FACESIZE = BODY_COUNT * (36);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 namespace KinectPV2{
-	class DeviceOptions{
 
-	public:
-		DeviceOptions();
-		~DeviceOptions(){}
-
-		void			enableColorImage(bool toggle = true){ toggleColorFrame = toggle; }
-		void			enableDepthImage(bool toggle = true){ toggleDepthFrame = toggle; }
-		void			enableDepthMaskImage(bool toggle = true){
-								toggleDepthMaskFrame = toggle;
-								if (toggleDepthMaskFrame){
-									toggleDepthFrame = true;
-								}
-		}
-
-		void			enableFaceDetection(bool toggle = false){
-								toggleFaceDetection = toggle;
-								if (toggleFaceDetection){
-									toggleSkeleton = true;
-									toggleColorFrame = true;
-									toggleInFraredFrame = true;
-								}
-		}
-
-		void			enableHDFaceDetection(bool toggle = false){
-								toggleHDFaceDetection = toggle;
-								if (toggleHDFaceDetection){
-									toggleSkeleton = true;
-									toggleColorFrame = true;
-									toggleInFraredFrame = true;
-									//toggleBodyTrack = true;
-								}
-		}
-
-		void			enableCoordinateMapperColor(bool toggle = false){
-								togglCoodinateMappingColor = toggle;
-								if (togglCoodinateMappingColor){
-									toggleColorFrame = true;
-									toggleDepthFrame = true;
-									toggleBodyTrack  = true;
-								}
-						}
-
-		void            enableInFraredImage(bool toggle = true){ toggleInFraredFrame = toggle; }
-		void			enableInFraredExposureImage(bool toggle = true){ toggleInFraredLongExposure = toggle; }
-
-
-		void            enableBodyTrack(bool toggle = true){ toggleBodyTrack = toggle; }
-
-		void			enablePointCloud(bool toggle = true){ togglePointCloud = toggle; }
-		void			enablePointCloudColor(bool toggle = true){ togglePointCloudColor = toggle; }
-
-		void			enableRawDepthData(bool toggle = true){ toggleRawDepthData = toggle; }
-
-		void            enableSkeleton(bool toggle = true){ toggleSkeleton = toggle; }
-		void			enableSkeletonDepthMap(bool toggle = true){ 
-									toggleSkeletonDepthMap = toggle;
-									if (toggleSkeletonDepthMap){
-										toggleDepthFrame = true;
-									}
-						}
-
-		void			enableSkeleton3dMap(bool toggle = true){ toggleSkeleton3dMap = toggle; }
-		void			enableSkeletonColorMap(bool toggle = true){
-									toggleSkeletonColorMap = toggle;
-									if (toggleSkeletonColorMap){
-										toggleColorFrame = true;
-									}
-						}
-
-		inline bool		isEnableColorFrame(){ return toggleColorFrame; }
-		inline bool     isEnableDepthFrame(){ return toggleDepthFrame; }
-		inline bool		isEnableDepthMaskFrame(){ return toggleDepthMaskFrame; }
-		inline bool		isEnableInFraredFrame(){ return toggleInFraredFrame; }
-		inline bool		isEnableInfraredExposureFrame(){ return toggleInFraredLongExposure; }
-
-		inline bool     isEnableFaceDetection(){ return toggleFaceDetection; }
-		inline bool		isEnableHDFaceDetection(){ return toggleHDFaceDetection; }
-
-		inline bool		isEnableBodyTrack(){ return toggleBodyTrack; }
-
-		inline bool		isEnablePointCloud(){ return togglePointCloud; }
-		inline bool		isEnablePointCloudColor(){ return togglePointCloudColor; }
-
-		inline bool		isEnableRawDepthData(){ return toggleRawDepthData; }
-
-		inline bool     isEnableSkeleton(){ return toggleSkeleton; }
-		inline bool		isEnableSkeletonDepthMap(){ return toggleSkeletonDepthMap; }
-		inline bool		isEnableSkeleton3dMap(){ return toggleSkeleton3dMap; }
-		inline bool		isEnableSkeletonColorMap(){ return toggleSkeletonColorMap; }
-
-		inline bool		isEnableCoordinateMappingColor(){ return togglCoodinateMappingColor;}
-
-	private:
-		bool		toggleColorFrame;
-		bool		toggleDepthFrame;
-		bool		toggleDepthMaskFrame;
-
-		bool		toggleFaceDetection;
-		bool		toggleHDFaceDetection;
-
-		bool		toggleInFraredFrame;
-		bool        toggleInFraredLongExposure;
-	
-		bool		togglePointCloud;
-		bool		togglePointCloudColor;
-		
-		bool		toggleRawDepthData;
-
-		bool        toggleBodyTrack;
-		bool		toggleSkeleton;
-
-		bool		toggleSkeletonDepthMap;
-		bool		toggleSkeleton3dMap;
-		bool		toggleSkeletonColorMap;
-
-		bool		togglCoodinateMappingColor;
-	};
-
-	class Device : public DeviceOptions
+	class Device : public DeviceOptions, public DeviceActivators
 	{
 	private:
 		uint8_t *	 pixelsData;
-		uint8_t *    colorFrameData;
+		uint8_t *    pixelsDataTemp;
+
+		float     *	 colorChannelsData;
+		RGBQUAD   *	 colorChannelsDataTemp;
 
 		uint8_t	*	 outCoordMapperRGBX;
 
-		
 		uint32_t *	 depthData;
 		uint32_t *   depthMaskData;
-		uint32_t *   depthRawData;
+
+		uint16_t *   depthRawData; //rawData
 
 		float    *	 pointCloudPosData;
 		float    *   pointCloudColorData;
@@ -219,20 +108,39 @@ namespace KinectPV2{
 		float    *   skeletonDataDepthMap;
 		float    *   skeletonDataColorMap;
 
+		//FACE
+		float	 *   faceDataColor;
+		float    *   faceDataInInfrared;
+
+		//HD FACE
 		float	 *   hdFaceDeformations;
 		float    *   hdFaceVertex;
-
 		UINT32		 hdFaceVertexCount;
 
-		float	 *   faceData;
+		//MAPS
+		float    *   mapDepthCameraTableData;
+		float	 *   mapDepthToColorData;
+		float	 *   mapColorToDepthData;
 
-		uint32_t *   bodyTrackData;
+		uint32_t *   bodyIndexData;
+		//get independent bodytrackData
+
+		uint32_t *	 bodyTackDataUser_1;
+		uint32_t *	 bodyTackDataUser_2;
+		uint32_t *	 bodyTackDataUser_3;
+		uint32_t *	 bodyTackDataUser_4;
+		uint32_t *	 bodyTackDataUser_5;
+		uint32_t *	 bodyTackDataUser_6;
+
+		uint32_t *   bodyTrackingIndex;
 
 		int			appWidth;
 		int         appHeight;
 
 		bool		mirror;
 
+
+	//	uint32_t	frame_size_depth;
 	protected:
 
 		IKinectSensor					*	kSensor;
@@ -258,9 +166,13 @@ namespace KinectPV2{
 		CameraSpacePoint				*   mCamaraSpacePointColor;
 		ColorSpacePoint					*	mColorSpacePoint;
 		DepthSpacePoint					*   mDepthCoordinates;
+		ColorSpacePoint					*	mDepthToColorPoints;
 
-		float						depthPCLowTh;
-		float						depthPCHighTh;
+		float								depthPCLowTh;
+		float								depthPCHighTh;
+
+		bool								activateMapDepthToCamaraTable;
+		bool								activateMapDepthToColor;
 
 	public:
 		Device(void);
@@ -280,8 +192,14 @@ namespace KinectPV2{
 
 		//-----JNI
 		uint8_t  *						JNI_GetImage();
+		float    *						JNI_GetColorChannels();
+		
+
 		uint32_t *						JNI_GetDepth();
-		uint32_t *						JNI_GetDepthRawData();
+
+		uint16_t *						JNI_GetDepthRawData();
+
+
 		uint32_t *						JNI_GetDepthSha();
 		uint32_t *						JNI_GetInfrared();
 		uint32_t *						JNI_GetLongExposureInfrared();
@@ -293,7 +211,9 @@ namespace KinectPV2{
 		uint32_t *						JNI_GetBodyTrack();
 
 		//FACE
-		float *						    JNI_getFaceRawData();
+		float *						    JNI_getFaceColorRawData();
+		float *							JNI_getFaceInfraredRawData();
+
 		float *							JNI_getHDFaceVertexRawData();
 
 		float *							JNI_pointCloudPosData();
@@ -307,14 +227,18 @@ namespace KinectPV2{
 		float *							JNI_getSkeletonData3dMap();
 		float *							JNI_getSkeletonDataColorMap();
 
+		//MAPS
+		float *							JNI_getMapDepthToCameraTable();
+		float *							JNI_getMapDepthToColor();
+
+		//USERS
+		uint32_t *						JNI_getBodyIndexUser(int index);
+
 		std::string						JNI_version() { return VERSION; }
 
-
-		void							setSkeletonType(int val){ skeletonMapType = val; }
-
 		//HELP FUNTIONS
-		float *							BodyToScreenColor(const CameraSpacePoint& bodyPoint);
-		float *							BodyToScreenDepth(const CameraSpacePoint& bodyPoint);
+		float *							BodyToScreenColor(const CameraSpacePoint * bodyPoint);
+		float *							BodyToScreenDepth(const CameraSpacePoint * bodyPoint);
 
 		int								colorByte2Int(int gray);
 		int								colorFloat2Int(float gray);
@@ -322,30 +246,12 @@ namespace KinectPV2{
 		static void						ExtractFaceRotationInDegrees(const Vector4* pQuaternion, int* pPitch, int* pYaw, int* pRoll);
 		float							lmap(float val, float inMin, float inMax, float outMin, float outMax);
 
+		int								numberUsers;
+		uint32_t						getColorMaskUser(BYTE ir);
+
 		float							constrain(float val, float min, float max);
 
-		bool							infraredFrameReady;
-		bool							colorFrameReady;
-		bool							depthFrameReady;
-		bool							bodyIndexReady;
-		bool							longExposureReady;
-		bool							depthMaskReady;
 
-		bool							depthPointCloudFrameReady;
-		bool							depthPointCloudImageReady;
-		bool							colorPointCloudFrameReady;
-
-		bool							skeleton3dReady;
-		bool							skeletonDepthReady;
-		bool							skeletonColorReady;
-
-		int								skeletonMapType;
-		
-		//FACE
-		bool							faceDetectionReady;
-		bool							hdFaceDetectionReady;
-
-		bool							coordinateRGBXReady;
 
 		void							setLowThresholdDepthPC(float val){ depthPCLowTh = val; }
 		float							getLowThresholdDepthPC(){ return depthPCLowTh; }
@@ -353,6 +259,18 @@ namespace KinectPV2{
 
 		void							setHighThresholdDepthPC(float val){ depthPCHighTh = val; }
 		float							getHighThresholdDepthPC(){ return depthPCHighTh; }
+
+		void							setNumberOfUsers(int num){ if (num > 6) num = 6; if (num < 1) num = 1; numberUsers = num; }
+
+
+		//MAPERS
+		void							enableMapDepthToCamaraTable(){ activateMapDepthToCamaraTable = true; }
+		void							enableMapDepthToColorData(){ activateMapDepthToColor = true; }
+
+		//SIZES
+///		uint32_t						getFrameSizeDepth(){ return frame_size_depth; }
+
+
 		//
 		//uint32_t						depthJNI[frame_size_depth];
 	};
