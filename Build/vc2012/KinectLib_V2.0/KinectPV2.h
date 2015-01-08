@@ -89,7 +89,8 @@ namespace KinectPV2{
 		uint32_t *	 depthData;
 		uint32_t *   depthMaskData;
 
-		uint16_t *   depthRawData; //rawData
+		uint16_t  *   depthRaw_16_Data; //rawData
+		uint16_t *   depthRaw_256_Data;
 
 		float    *	 pointCloudPosData;
 		float    *   pointCloudColorData;
@@ -197,7 +198,8 @@ namespace KinectPV2{
 
 		uint32_t *						JNI_GetDepth();
 
-		uint16_t *						JNI_GetDepthRawData();
+		uint16_t *						JNI_GetDepthRaw_16_Data();
+		uint16_t *						JNI_GetDepthRaw_256_Data();
 
 
 		uint32_t *						JNI_GetDepthSha();

@@ -14,6 +14,8 @@ namespace KinectPV2{
 
 		~DeviceOptions(){}
 
+		//BASIC FUNCTIONS
+
 		void			enableColorImage(bool toggle = true){
 							initToggleColorFrame = toggle;
 							toggleColorFrame = toggle;
@@ -36,9 +38,11 @@ namespace KinectPV2{
 							toggleBodyIndexDepthFrame = toggle;
 		}
 
-		void			enableDepthSmooth(bool toggle){ toggleDepthSmooth = toggle; }
+		void			enableDepthSmooth(bool toggle){ 
+							toggleDepthSmooth = toggle;
+		}
 
-
+		//FACE
 		void			enableFaceDetection(bool toggle = false){
 							initToggleInfraredFrame = toggle;
 							initToggleColorFrame = toggle;
@@ -49,12 +53,14 @@ namespace KinectPV2{
 							toggleColorFrame = toggle;
 		}
 
+		//HD FACE
 		void			enableHDFaceDetection(bool toggle = false){
 							initToggleInfraredFrame = toggle;
 							initToggleColorFrame = toggle;
 							initToggleSkeleton = toggle;
 							initToggleHDFaceDetection = toggle;
 							toggleHDFaceDetection = toggle;
+							toggleSkeleton = toggle;
 			//toggleBodyTrack = true;
 		}
 
@@ -80,17 +86,21 @@ namespace KinectPV2{
 							initToggleBodyIndexFrame = toggle;
 		}
 
-		void			enablePointCloud(bool toggle = true){ 
+		void			enablePointCloudDepth(bool toggle = true){ 
 							togglePointCloudFrame = toggle; 
 						}
 						
 		void			enablePointCloudColor(bool toggle = true){
 							togglePointCloudColorFrame = toggle;
+							toggleDepthFrame = toggle;
 							initToggleDepthFrame = toggle;
 							initToggleColorFrame = toggle;
 		}
 
-		void			enableRawDepthData(bool toggle = true){ toggleRawDepthData = toggle; }
+		void			enableRawDepthData(bool toggle = true){ 
+							toggleRawDepthData = toggle; 
+		}
+
 
 		void			enableSkeleton(bool toggle = true){
 							initToggleSkeleton = toggle;
@@ -116,7 +126,7 @@ namespace KinectPV2{
 
 		inline bool		isEnableBodyIndex(){ return toggleBodyIndexFrame; }
 
-		inline bool		isEnablePointCloud(){ return togglePointCloudFrame; }
+		inline bool		isEnablePointCloudDepth(){ return togglePointCloudFrame; }
 		inline bool		isEnablePointCloudColor(){ return togglePointCloudColorFrame; }
 
 		inline bool		isEnableRawDepthData(){ return toggleRawDepthData; }

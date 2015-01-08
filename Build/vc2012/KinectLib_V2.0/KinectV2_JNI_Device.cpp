@@ -263,7 +263,10 @@ JNIEXPORT jboolean JNICALL Java_KinectPV2_Device_jniUpdate
 			jclass clazz = env->GetObjectClass(obj);
 			jmethodID methodID = env->GetMethodID(clazz, "copyCoordinateMapper", "([I)V");
 			env->CallVoidMethod(obj, methodID, buffer);
-			//kinect->coordinateRGBXReady = false;
+			
+			env->DeleteLocalRef(clazz);
+			env->DeleteLocalRef((jobjectArray)buffer);
+			env->DeleteLocalRef((jobjectArray)(pInt));
 		}
 
 		if (kinect->isFaceDetectionReady()){
@@ -301,7 +304,9 @@ JNIEXPORT jboolean JNICALL Java_KinectPV2_Device_jniUpdate
 			jmethodID methodID = env->GetMethodID(clazz, "copyHDFaceVertexRawData", "([F)V");
 			env->CallVoidMethod(obj, methodID, buffer);
 
-			//kinect->hdFaceDetectionReady = false;
+			env->DeleteLocalRef(clazz);
+			env->DeleteLocalRef((jobjectArray)buffer);
+			env->DeleteLocalRef((jobjectArray)(pfloat));
 		}
 	
 	}
@@ -424,9 +429,7 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableHDFaceDetection
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	kinect->enablePointCloud((bool)toggle);
-	if (toggle == JNI_TRUE)
-		kinect->enableHDFaceDetection(true);
+	kinect->enableHDFaceDetection(true);
 	env->DeleteLocalRef(cls);
 
 }
@@ -438,9 +441,7 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnableCoordinateMappingRGBDepth
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	kinect->enablePointCloud((bool)toggle);
-	if (toggle == JNI_TRUE)
-		kinect->enableCoordinateMapperColor(true);
+	kinect->enableCoordinateMapperColor(true);
 	env->DeleteLocalRef(cls);
 }
 
@@ -488,7 +489,7 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniEnablePointCloud
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	kinect->enablePointCloud((bool)toggle);
+	kinect->enablePointCloudDepth((bool)toggle);
 	if (toggle == JNI_TRUE)
 		kinect->enableDepthImage(true);
 	env->DeleteLocalRef(cls);
@@ -587,7 +588,7 @@ JNIEXPORT jfloatArray JNICALL Java_KinectPV2_Device_jniEnableMapDethToColorSpace
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	//kinect->enableMapDepthToColorData();
+	kinect->enableMapDepthToColorData();
 
 	jfloat * pfloat = (jfloat *)kinect->JNI_getMapDepthToColor();
 
@@ -722,7 +723,7 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniPointColorReadyCopy
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	kinect->colorPointCloudFrameReady();
+	kinect->colorPointCloudFrameReady(!val);
 	env->DeleteLocalRef(cls);
 }
 
@@ -765,11 +766,14 @@ JNIEXPORT jintArray JNICALL  Java_KinectPV2_Device_jniGetBodyIndexUser
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
 
+	jintArray buffer = env->NewIntArray((jsize)0);
 	const jint * pInt = (const jint *)kinect->JNI_getBodyIndexUser((jint)index);
-	jintArray buffer = env->NewIntArray((jsize)frame_size_depth);
+	buffer = env->NewIntArray((jsize)frame_size_depth);
+	env->NewIntArray((jsize)frame_size_depth);
 	env->SetIntArrayRegion(buffer, 0, (jsize)frame_size_depth, (const jint *)(pInt));
 
 	env->DeleteLocalRef(cls);
+	//env->DeleteLocalRef((jobject)pInt);
 
 	return buffer;
 }

@@ -23,13 +23,13 @@ FaceFrameFeatures::FaceFrameFeatures_BoundingBoxInColorSpace
 
 static const double c_FaceRotationIncrementInDegrees = 5.0f;
 
-uint32_t  bodyColors[] = { 0xffffffff, 0x00ff00ff, 0xff0000ff, 0xffff00ff, 0xff00ffff, 0x00ffffff, 0x0000ffff };
+uint32_t  bodyColors[] = { 0x0000ffff, 0x00ff00ff, 0xff0000ff, 0xffff00ff, 0xff00ffff, 0x00ffffff, 0x0000ffff };
 
 namespace KinectPV2{
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	Device::Device() :
 		pixelsData(NULL), pixelsDataTemp(NULL), colorChannelsData(NULL), colorChannelsDataTemp(NULL), outCoordMapperRGBX(NULL),
-		depthData(NULL), depthMaskData(NULL), depthRawData(NULL), pointCloudPosData(NULL), pointCloudColorData(NULL),
+		depthData(NULL), depthMaskData(NULL), depthRaw_16_Data(NULL), depthRaw_256_Data(NULL), pointCloudPosData(NULL), pointCloudColorData(NULL),
 		pointCloudDepthImage(NULL), pointCloudDepthNormalized(NULL), pointCloudRawImage(NULL), colorCameraPos(NULL), infraredData(NULL),
 		longExposureData(NULL), skeletonData3dMap(NULL), skeletonDataDepthMap(NULL), skeletonDataColorMap(NULL), faceDataColor(NULL),
 		faceDataInInfrared(NULL), hdFaceDeformations(NULL), hdFaceVertex(NULL), hdFaceVertexCount(NULL), mapDepthCameraTableData(NULL),
@@ -146,8 +146,9 @@ namespace KinectPV2{
 					std::cout << "ENABLE DEPTH FRAME" << std::endl;
 					flags |= FrameSourceTypes::FrameSourceTypes_Depth;
 
-					depthData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
-					depthRawData = (uint16_t *)malloc(frame_size_depth * sizeof(uint16_t));
+					depthData         = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
+					depthRaw_16_Data  = (uint16_t *)malloc(frame_size_depth * sizeof(uint16_t));
+					depthRaw_256_Data = (uint16_t *)malloc(frame_size_depth * sizeof(uint16_t));
 
 					depthMaskData = (uint32_t *)malloc(frame_size_depth * sizeof(uint32_t));
 				}
@@ -383,7 +384,8 @@ namespace KinectPV2{
 		SafeDeletePointer(infraredData);
 		SafeDeletePointer(longExposureData);
 		SafeDeletePointer(bodyIndexData);
-		SafeDeletePointer(depthRawData);
+		SafeDeletePointer(depthRaw_16_Data);
+		SafeDeletePointer(depthRaw_256_Data);
 		SafeDeletePointer(pointCloudColorData);
 		SafeDeletePointer(pointCloudPosData);
 		SafeDeletePointer(colorCameraPos);
@@ -557,8 +559,9 @@ namespace KinectPV2{
 							while (pBuffer < pBufferEnd)
 							{
 								USHORT depth = *pBuffer;
-								BYTE intensity = static_cast<BYTE>((depth >= nDepthMinReliableDistance) && (depth <= nDepthMaxReliableDistance) ? (depth % 256) : 0);
-								depthRawData[depthIndex] = intensity;
+								UINT16 intensity = static_cast<BYTE>((depth >= nDepthMinReliableDistance) && (depth <= nDepthMaxReliableDistance) ? (depth % 256) : 0);
+								depthRaw_16_Data[depthIndex] = depth;
+								depthRaw_256_Data[depthIndex] = intensity;
 								depthData[depthIndex] = colorByte2Int((uint32_t)intensity);
 								++pBuffer;
 								++depthIndex;
@@ -568,10 +571,10 @@ namespace KinectPV2{
 
 					}
 						
-					if (DeviceOptions::isEnablePointCloud() && kCoordinateMapper){
+					if (DeviceOptions::isEnablePointCloudDepth() && kCoordinateMapper){
 					
 						if (SUCCEEDED(hr) && pBuffer){
-							hr = kCoordinateMapper->MapDepthFrameToCameraSpace(frame_size_depth, depthRawData, frame_size_depth, mCamaraSpacePointDepth);
+							hr = kCoordinateMapper->MapDepthFrameToCameraSpace(frame_size_depth, reinterpret_cast<UINT16*>(depthRaw_16_Data), frame_size_depth, mCamaraSpacePointDepth);
 
 							//hr = kCoordinateMapper->MapCameraPointsToColorSpace(frame_size_depth, mCamaraSpacePointDepth, frame_size_depth, mColorSpacePoint);
 
@@ -645,7 +648,7 @@ namespace KinectPV2{
 					//MAP Depth to Color
 					if (activateMapDepthToColor){
 						if (SUCCEEDED(hr) && pBuffer){
-							hr = kCoordinateMapper->MapDepthFrameToColorSpace(frame_size_depth, depthRawData, frame_size_depth, mDepthToColorPoints);
+							hr = kCoordinateMapper->MapDepthFrameToColorSpace(frame_size_depth, reinterpret_cast<UINT16*>(depthRaw_16_Data), frame_size_depth, mDepthToColorPoints);
 
 							if (SUCCEEDED(hr)){
 								int  pBufferEnd =  (frame_size_depth);
@@ -736,13 +739,12 @@ namespace KinectPV2{
 
 				if (SUCCEEDED(hr) && pBufferDepth && pBufferColor && kCoordinateMapper)
 				{
-					hr = kCoordinateMapper->MapColorFrameToCameraSpace(frame_size_depth, reinterpret_cast<UINT16*>(depthRawData), frame_size_color, mCamaraSpacePointColor);
+					hr = kCoordinateMapper->MapColorFrameToCameraSpace(frame_size_depth, reinterpret_cast<UINT16*>(depthRaw_16_Data), frame_size_color, mCamaraSpacePointColor);
 
 					if (SUCCEEDED(hr) && mCamaraSpacePointColor != NULL){
 						int indexColor = 0;
 						int pixelColor = 0;
 						int cameraSpaceIndex = 0;
-						//cout << "passing color" << std::endl;
 						while (indexColor < frame_size_color)
 						{  //pixelsData
 							RGBQUAD  pSrc = pBufferColor[indexColor];
@@ -1274,20 +1276,8 @@ namespace KinectPV2{
 						BYTE ir = int(*pBodyIndexBuffer);
 					
 						uint32_t intensity;
-						if (ir == 0)
-							intensity = 0x0000ff;
-						else if (ir == 1)
-							intensity = 0x00ff00;
-						else if (ir == 2)
-							intensity = 0xff0000;
-						else if (ir == 3)
-							intensity = 0xffff00;
-						else if (ir == 4)
-							intensity = 0xff00ff;
-						else if (ir == 5)
-							intensity = 0x00ffff;
-						else if (ir == 6)
-							intensity = 0xffffff;
+						if (ir > 0 && ir <= 6)
+							intensity = bodyColors[ir];
 						else
 							intensity = depthData[depthMaskIndex];
 
@@ -1730,7 +1720,6 @@ namespace KinectPV2{
 										hr = kCoordinateMapper->MapCameraPointToColorSpace(facePoints[point], &colorSpacePoint);
 										if (SUCCEEDED(hr))
 										{
-
 											hdFaceVertex[count*hdFaceVertexCount * 2 + point * 2 + 0] = colorSpacePoint.X;
 											hdFaceVertex[count*hdFaceVertexCount * 2 + point * 2 + 1] = colorSpacePoint.Y;
 										}
@@ -1882,9 +1871,14 @@ namespace KinectPV2{
 		return depthMaskData;
 	}
 
-	uint16_t * Device::JNI_GetDepthRawData()
+	uint16_t * Device::JNI_GetDepthRaw_16_Data()
 	{
-		return depthRawData;
+		return depthRaw_16_Data;
+	}
+
+	uint16_t * Device::JNI_GetDepthRaw_256_Data()
+	{
+		return depthRaw_256_Data;
 	}
 
 	uint32_t * Device::JNI_GetDepthSha()
@@ -1976,6 +1970,8 @@ namespace KinectPV2{
 
 	uint32_t *	Device::JNI_getBodyIndexUser(int index)
 	{
+		if (index > 6 && index < 1)
+			index = 1;
 		switch (index){
 		case 1:
 			return bodyTackDataUser_1;
