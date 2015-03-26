@@ -78,18 +78,28 @@ JNIEXPORT jboolean JNICALL Java_KinectPV2_Device_jniUpdate
 			env->DeleteLocalRef((jobjectArray)(pInt));
 		}
 		if (kinect->isDepthFrameReady()){
-			jint * pInt = (jint *)kinect->JNI_GetDepth();
+			//The callback Java class to call
+			jclass clazz = env->GetObjectClass(obj);
 
+			//Get Depth Image
+			jint * pInt = (jint *)kinect->JNI_GetDepth();
 			jintArray buffer = env->NewIntArray(frame_size_depth);
 			env->SetIntArrayRegion(buffer, 0, frame_size_depth, pInt);
-
-			jclass clazz = env->GetObjectClass(obj);
 			jmethodID methodID = env->GetMethodID(clazz, "copyDepthImg", "([I)V");
 			env->CallVoidMethod(obj, methodID, buffer);
 
+			//Get Raw Depth Data
+			jshort* pRawDepthData = (jshort*)kinect->JNI_GetDepthRaw_16_Data();
+			jshortArray depthBuffer = env->NewShortArray(frame_size_depth);
+			env->SetShortArrayRegion(depthBuffer, 0, frame_size_depth, pRawDepthData);			
+			methodID = env->GetMethodID(clazz, "copyDepthRawData", "([S)V");
+			env->CallVoidMethod(obj, methodID, depthBuffer);
+			
+			//Cleanup
 			env->DeleteLocalRef(clazz);
 			env->DeleteLocalRef((jobjectArray)buffer);
 			env->DeleteLocalRef((jobjectArray)(pInt));
+			env->DeleteLocalRef((jobjectArray)(pRawDepthData));
 		}
 
 		if (kinect->isBodyIndexReady()){
