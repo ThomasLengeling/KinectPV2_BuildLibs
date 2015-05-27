@@ -52,7 +52,7 @@ along with KinectfV2.0 library for Processing.  If not, see
 
 #define M_PI 3.14159265358979323846
 
-#define VERSION			"0.5.1"
+#define VERSION			"0.7.3"
 
 static const int         cColorWidth = 1920;
 static const int         cColorHeight = 1080;
@@ -179,7 +179,12 @@ namespace KinectPV2{
 		~Device(void);
 
 		bool	init();
-		void	stop();
+
+		//STOP FUNCTIONS
+		void	disable();
+		void    cleanMemory();
+
+
 		bool	update();
 
 		void	enableMirror(bool enableMirror){ mirror = enableMirror; }

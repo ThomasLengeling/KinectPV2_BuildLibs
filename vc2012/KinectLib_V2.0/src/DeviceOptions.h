@@ -14,6 +14,33 @@ namespace KinectPV2{
 
 		~DeviceOptions(){}
 
+		void disableAll()
+		{
+			toggleColorFrame= false;
+			toggleDepthFrame= false;
+			toggleInFraredFrame= false;
+			toggleBodyIndexDepthFrame= false;
+			toggleDepthSmooth= false;
+			toggleLongExposureInFraredFrame= false;
+			togglePointCloudFrame= false;
+			togglePointCloudColorFrame= false;
+			toggleFaceDetection= false;
+			toggleRawDepthData= false;
+			toggleBodyIndexFrame= false;
+			toggleSkeleton= false;
+			togglCoodinateMappingColor= false;
+			toggleHDFaceDetection= false;
+			toggleColorChannelsFrame= false;
+			initToggleDepthFrame= false;
+			initToggleColorFrame= false;
+			initToggleInfraredFrame= false;
+			initToggleSkeleton= false;
+			initToggleBodyIndexFrame= false;
+			initToggleFaceDetection= false;
+			initToggleLongExposureInfraredFrame= false;
+			initToggleHDFaceDetection= false;
+		}
+
 		void			enableColorImage(bool toggle = true){
 							initToggleColorFrame = toggle;
 							toggleColorFrame = toggle;

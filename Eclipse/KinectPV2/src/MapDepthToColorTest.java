@@ -46,7 +46,7 @@ public class MapDepthToColorTest extends PApplet {
 	public void draw() {
 		background(0);
 
-		float[] mapDCT = kinect.getMapDepthToColor();
+		/*float[] mapDCT = kinect.get
 
 		// get the raw data from depth and color
 		int[] colorRaw = kinect.getRawColor();
@@ -89,6 +89,7 @@ public class MapDepthToColorTest extends PApplet {
 		image(kinect.getDepthImage(), 512, 0);
 
 		text("fps: " + frameRate, 50, 50);
+		*/
 	}
 
 }

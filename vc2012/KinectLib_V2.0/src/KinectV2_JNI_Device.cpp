@@ -87,7 +87,7 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniStopDevice
 	jclass cls = env->GetObjectClass(obj);
 	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
 	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
-	kinect->stop();
+	kinect->disable();
 	env->DeleteLocalRef(cls);
 }
 
@@ -99,8 +99,12 @@ JNIEXPORT void JNICALL Java_KinectPV2_Device_jniStopDevice
 JNIEXPORT jboolean JNICALL Java_KinectPV2_Device_jniStopSignal
 (JNIEnv * env, jobject obj)
 {
-	bool result = false;
-	return result;
+	jclass cls = env->GetObjectClass(obj);
+	jfieldID fid = env->GetFieldID(cls, "ptr", "J");
+	KinectPV2::Device * kinect = (KinectPV2::Device *) env->GetLongField(obj, fid);
+	kinect->cleanMemory();
+	env->DeleteLocalRef(cls);
+	return true;
 }
 
 	/*

@@ -5,43 +5,58 @@ namespace KinectPV2{
 	{
 	public:
 		DeviceActivators(){
-			mColorFrameReady = false;
-			mColorChannelsFrameReady = false;
+			disableAll();
+		}
 
-			mDepthFrameReady = false;
-			mDepthFrameDone = false;
 
-			mInfraredFrameReady = false;
-			mInfraredFrameDone = false;
+		void disableAll()
+		{
+			//COLOR
+			mColorFrameReady			= false;
+			mColorChannelsFrameReady	= false;
 
-			mInfraredlongExposureReady = false;
+			//DEPTH
+			mDepthFrameReady	= false;
+			mDepthFrameDone		= false;
 
-			mBodyIndexReady = false;
-			mBodyIndexDephReady = false;
+			//INFRARED
+			mInfraredFrameReady			= false;
+			mInfraredFrameDone			= false;
+			mInfraredlongExposureReady	= false;
+
+			//BODY INDEX
+			mBodyIndexReady			= false;
+			mBodyIndexDephReady		= false;
 
 			//POINT CLOID
-			mDepthPointCloudPosReady = false;
-			mDepthPointCloudImageReady = false;
-			mColorPointCloudFrameReady = false;
+			mDepthPointCloudPosReady	= false;
+			mDepthPointCloudImageReady	= false;
+			mColorPointCloudFrameReady	= false;
 
 			//SKELETON
-			mSkeletonDepthReady = false;
-			mSkeletonColorReady = false;
-			mSkeleton3DReady = false;
+			mSkeletonDepthReady		= false;
+			mSkeletonColorReady		= false;
+			mSkeleton3DReady		= false;
+
+			mSkeletonDepthDone		= false;
+			mSkeletonColorDone		= false;
+			mSkeleton3DDone			= false;
 
 			//FACE
-			mFaceDetectionReady = false;
-			mHDFaceDetectionReady = false;
+			mFaceDetectionReady			= false;
+			mHDFaceDetectionReady		= false;
 
-			mCoordinateRGBXReady = false;
+			//MAPERS
+			mCoordinateRGBXReady		= false;
 
 			//THREADS
-			colorProcess = false;
-			depthProcess = false;
-			infraredProcess = false;
-			infraredLongExposureProcess = false;
-			skeletonProcess = false;
-			bodyTrackProcess = false;
+			colorProcess					= false;
+			depthProcess					= false;
+			infraredProcess					= false;
+			infraredLongExposureProcess		= false;
+			skeletonProcess					= false;
+			bodyTrackProcess				= false;
+			hdFaceProcess					= false;
 		}
 
 		bool			isColorFrameReady(){ return mColorFrameReady; }
@@ -72,9 +87,6 @@ namespace KinectPV2{
 		bool			isHDFaceDetectionReady(){ return  mHDFaceDetectionReady; }
 
 		bool			isCoordinateRGBXReady(){ return  mCoordinateRGBXReady; }
-
-
-
 
 	protected:
 		bool			mColorFrameReady;

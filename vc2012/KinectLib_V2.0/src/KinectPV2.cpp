@@ -451,45 +451,26 @@ namespace KinectPV2{
 	}
 
 
-	void Device::stop()
+	void Device::disable()
 	{
-
 		//deactivate options 
-		DeviceOptions::enableInFraredImage(false);
-		DeviceOptions::enableColorImage(false);
-		DeviceOptions::enableDepthImage(false);
-		DeviceOptions::enableInFraredLongExposureImage(false);
-		DeviceOptions::enableBodyTrack(false);
-		DeviceOptions::enableSkeleton(false);
-		DeviceOptions::enablePointCloud(false);
-		DeviceOptions::enableRawDepthData(false);
-		DeviceOptions::enableDepthMaskImage(false);
-		DeviceOptions::enableFaceDetection(false);
-		DeviceOptions::enableSkeletonDepthMap(false);
-		DeviceOptions::enableSkeletonColorMap(false);
-		DeviceOptions::enableSkeleton3DMap(false);
-		DeviceOptions::enablePointCloudColor(false);
-		DeviceOptions::enableHDFaceDetection(false);
-
-		DeviceActivators::enableColorProcess(false);
-		DeviceActivators::enableDepthProcess(false);
-		DeviceActivators::enableInfraredProcess(false);
-		DeviceActivators::enableInfraredLongExposureProcess(false);
-		DeviceActivators::enableSkeletonProcess(false);
-		DeviceActivators::enableBodyTrackProcess(false);
-		DeviceActivators::enableHDFaceProcess(false);
-
+		cout << "Clossing kinect V2" << std::endl;
+		DeviceOptions::disableAll();
+		DeviceActivators::disableAll();
 
 		//threads
-		//mThreadDepth.join();
-		//mThreadColor.join();
-		//mThreadInfrared.join();
-		//mThreadInfraredLongExposure.join();
-		//mThreadSkeleton.join();
-		//mThreadBodyTrack.join();
+		/*mThreadDepth.join();
+		mThreadColor.join();
+		mThreadInfrared.join();
+		mThreadInfraredLongExposure.join();
+		mThreadSkeleton.join();
+		mThreadBodyTrack.join();
+		*/
 
+	}
 
-		cout << "Clossing kinect V2" << std::endl;
+	void Device::cleanMemory()
+	{
 		SafeRelease(kColorFrameReader);
 		SafeRelease(kBodyFrameReader);
 		SafeRelease(kBodyIndexFrameReader);
@@ -498,58 +479,27 @@ namespace KinectPV2{
 		SafeRelease(kInfraredFrameReader);
 		SafeRelease(kCoordinateMapper);
 
-
-		free(pixelsData);
-		free(pixelsDataTemp);
-		free(depthData);
-		free(infraredData);
-		free(colorFrameData);
-		free(infraredLongExposureData);
-		free(bodyTrackData);
-		free(depthRawData);
-		free(pointCloudColorData);
-		free(pointCloudPosData);
-		free(colorCameraPos);
-		free(depthMaskData);
-		free(faceColorData);
-		free(faceInfraredData);
-		free(skeletonData3dMap);
-		free(skeletonDataDepthMap);
-		free(skeletonDataColorMap);
-		free(pointCloudDepthImage);
-		free(pointCloudDepthNormalized);
-		free(hdFaceVertex);
-		free(hdFaceDeformations);
-
-		(pixelsData) = NULL;
-		(depthData) = NULL;
-		(infraredData) = NULL;
-		(colorFrameData) = NULL;
-		(skeletonData3dMap) = NULL;
-		(skeletonDataDepthMap) = NULL;
-		(skeletonDataColorMap) = NULL;
-		(infraredLongExposureData) = NULL;
-		(bodyTrackData) = NULL;
-		(depthRawData) = NULL;
-		(pointCloudColorData) = NULL;
-		(pointCloudPosData) = NULL;
-		(pointCloudDepthImage) = NULL;
-		(pointCloudDepthNormalized) = NULL;
-		(hdFaceVertex) = NULL;
-		(hdFaceDeformations) = NULL;
-
-		(colorCameraPos) = NULL;
-		(depthMaskData) = NULL;
-		(faceColorData) = NULL;
-		(faceInfraredData) = NULL;
-
-
-		SafeArrayDelete(mCamaraSpacePointDepth);
-		SafeArrayDelete(mCamaraSpacePointColor);
-		SafeArrayDelete(mColorSpacePoint);
-		SafeArrayDelete(mDepthCoordinates);
-		SafeArrayDelete(mDepthToColorPoints);
-
+		SafeDeletePointer(pixelsData);
+		SafeDeletePointer(pixelsDataTemp);
+		SafeDeletePointer(depthData);
+		SafeDeletePointer(infraredData);
+		SafeDeletePointer(colorFrameData);
+		SafeDeletePointer(infraredLongExposureData);
+		SafeDeletePointer(bodyTrackData);
+		SafeDeletePointer(depthRawData);
+		SafeDeletePointer(pointCloudColorData);
+		SafeDeletePointer(pointCloudPosData);
+		SafeDeletePointer(colorCameraPos);
+		SafeDeletePointer(depthMaskData);
+		SafeDeletePointer(faceColorData);
+		SafeDeletePointer(faceInfraredData);
+		SafeDeletePointer(skeletonData3dMap);
+		SafeDeletePointer(skeletonDataDepthMap);
+		SafeDeletePointer(skeletonDataColorMap);
+		SafeDeletePointer(pointCloudDepthImage);
+		SafeDeletePointer(pointCloudDepthNormalized);
+		SafeDeletePointer(hdFaceVertex);
+		SafeDeletePointer(hdFaceDeformations);
 
 		SafeDeletePointer(bodyTackDataUser_1);
 		SafeDeletePointer(bodyTackDataUser_2);
@@ -558,29 +508,29 @@ namespace KinectPV2{
 		SafeDeletePointer(bodyTackDataUser_5);
 		SafeDeletePointer(bodyTackDataUser_6);
 
+		SafeArrayDelete(mCamaraSpacePointDepth);
+		SafeArrayDelete(mCamaraSpacePointColor);
+		SafeArrayDelete(mColorSpacePoint);
+		SafeArrayDelete(mDepthCoordinates);
+		SafeArrayDelete(mDepthToColorPoints);
 
+		//close the kinect
+		if (kSensor) {
+			kSensor->Close();
+		}
 
+		SafeRelease(kSensor);
+
+		//source readers clean up
 		for (int count = 0; count < BODY_COUNT; count++){
 			SafeRelease(kHDFaceSource[count]);
 			SafeRelease(kHDFaceReader[count]);
 			SafeRelease(kFaceModelBuilder[count]);
 			SafeRelease(kFaceAlignment[count]);
 			SafeRelease(kFaceModel[count]);
+			SafeRelease(kFaceFrameSources[count]);
+			SafeRelease(kFaceFrameReaders[count]);
 		}
-
-
-
-		for (int i = 0; i < BODY_COUNT; i++)
-		{
-			SafeRelease(kFaceFrameSources[i]);
-			SafeRelease(kFaceFrameReaders[i]);
-		}
-
-		if (kSensor) {
-			kSensor->Close();
-		}
-
-		SafeRelease(kSensor);
 
 	}
 
