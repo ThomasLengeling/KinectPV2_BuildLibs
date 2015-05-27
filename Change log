@@ -1,0 +1,9 @@
+Change log
+
+enableLongExposureInfraredImg to
+
+enableInfraredLongExposureImg
+
+getLongExposureInfraredImage to 
+
+getInfraredLongExposureImage
