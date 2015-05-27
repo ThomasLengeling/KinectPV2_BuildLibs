@@ -24,6 +24,7 @@
 *.sdf
 *.suos
 *.idb
+*.ipch
 
 # Custom for Visual Studio
 *.cs     diff=csharp
