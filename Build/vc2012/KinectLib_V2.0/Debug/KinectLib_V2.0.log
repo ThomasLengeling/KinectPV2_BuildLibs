@@ -1,0 +1,2 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(364,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(399,5): error MSB3191: Unable to create directory "C:\Users\thomas\Documents\Programacion\Java\Workspace\PKinectV2\lib\". Access to the path 'C:\Users\thomas\Documents\Programacion\Java\Workspace\PKinectV2\lib\' is denied.
