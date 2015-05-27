@@ -8,3 +8,4 @@
 *.log
 *.obj
 /Eclipse/.metadata/*
+/Eclipse/.recommenders/*

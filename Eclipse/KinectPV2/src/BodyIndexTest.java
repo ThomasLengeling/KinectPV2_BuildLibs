@@ -33,12 +33,14 @@ public class BodyIndexTest extends PApplet {
 	public void draw() {
 		background(255);
 	
+		/*
 		image(kinect.getBodyTrackImage(), 0, 424);
 		for(int i = 0; i < 4; i++)
 			image(kinect.getBodyIndexUser(i+1), 512*i, 0);
 		
 		for(int i = 0; i < 3; i++)
 			image(kinect.getBodyIndexUser(i + 5), 512*(i+1), 424);
+		*/
 	}
 	
 	public void keyPressed() {
