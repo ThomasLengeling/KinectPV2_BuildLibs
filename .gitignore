@@ -4,3 +4,6 @@
 *.idb
 *.sdf
 *.lo
+*.tlog
+*.log
+*.obj
