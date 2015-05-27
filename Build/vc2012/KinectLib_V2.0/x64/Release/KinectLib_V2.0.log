@@ -1,64 +1,72 @@
-﻿Build started 1/8/2015 5:00:52 PM.
-     1>Project "C:\Users\thomas\Documents\GitHub\KinectPV2_BuildLibs\Build\vc2012\KinectLib_V2.0\KinectLib_V2.0.vcxproj" on node 2 (Build target(s)).
-     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\Microsoft.CppBuild.targets(346,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /I"C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\\inc" /I"C:\Program Files\Java\jdk1.8.0_05\include" /I"C:\Program Files\Java\jdk1.8.0_05\include\win32" /IKinect20.lib /Zi /nologo /W3 /WX- /sdl /O2 /Oi /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D KINECTLIB_V20_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"x64\Release\KinectPV2.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt KinectPV2.cpp KinectV2_JNI_Device.cpp
-         KinectPV2.cpp
-     1>KinectPV2.cpp(283): warning C4305: 'return' : truncation from 'int' to 'bool'
-     1>KinectPV2.cpp(290): warning C4305: 'return' : truncation from 'int' to 'bool'
-     1>KinectPV2.cpp(756): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>KinectPV2.cpp(757): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>KinectPV2.cpp(758): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>KinectPV2.cpp(1392): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1393): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1394): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1395): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1397): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1398): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1399): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1400): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
-     1>KinectPV2.cpp(1405): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1406): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1407): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1409): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1410): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1411): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>KinectPV2.cpp(1584): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
-     1>KinectPV2.cpp(1587): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
-     1>KinectPV2.cpp(1590): warning C4244: '=' : conversion from 'TrackingState' to 'float', possible loss of data
-     1>KinectPV2.cpp(1593): warning C4244: '=' : conversion from 'JointType' to 'float', possible loss of data
-     1>KinectPV2.cpp(1717): warning C4018: '<' : signed/unsigned mismatch
-     1>KinectPV2.cpp(1769): warning C4172: returning address of local variable or temporary
-     1>KinectPV2.cpp(1782): warning C4172: returning address of local variable or temporary
-         KinectV2_JNI_Device.cpp
-     1>KinectV2_JNI_Device.cpp(338): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(348): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(360): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(370): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(380): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(390): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(400): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(410): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(421): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(460): warning C4244: '=' : conversion from 'jint' to 'uint8_t', possible loss of data
-     1>KinectV2_JNI_Device.cpp(478): warning C4244: '=' : conversion from 'jint' to 'uint8_t', possible loss of data
-     1>KinectV2_JNI_Device.cpp(492): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(504): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(559): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(610): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
-     1>KinectV2_JNI_Device.cpp(622): warning C4800: 'jint' : forcing value to bool 'true' or 'false' (performance warning)
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:"C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\\Lib\x64" kinect20.lib Kinect20.Face.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.lib" /MACHINE:X64 /DLL x64\Release\dllmain.obj
-         x64\Release\KinectLib_V2.0.obj
-         x64\Release\KinectV2_JNI_Device.obj
-         x64\Release\KinectPV2.obj
-         x64\Release\stdafx.obj
-            Creating library C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.lib and object C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.exp
-         Generating code
-         Finished generating code
-         KinectLib_V2.0.vcxproj -> C:\Users\thomas\Documents\Programacion\Java\Workspace\KinectPV2\lib\KinectPV2.dll
-     1>Done Building Project "C:\Users\thomas\Documents\GitHub\KinectPV2_BuildLibs\Build\vc2012\KinectLib_V2.0\KinectLib_V2.0.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:02.16
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\Microsoft.CppBuild.targets(346,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+  stdafx.cpp
+  dllmain.cpp
+  KinectLib_V2.0.cpp
+  KinectV2_JNI_Device.cpp
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(268): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(269): warning C4244: 'return' : conversion from 'float' to 'int', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(272): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(273): warning C4244: 'return' : conversion from 'float' to 'int', possible loss of data
+KinectV2_JNI_Device.cpp(117): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(132): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(147): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(162): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(177): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(192): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(208): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(209): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(225): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(226): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(242): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(243): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(259): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(260): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(275): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(276): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(286): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(559): warning C4800: 'jboolean' : forcing value to bool 'true' or 'false' (performance warning)
+KinectV2_JNI_Device.cpp(648): warning C4244: 'initializing' : conversion from 'int' to 'float', possible loss of data
+KinectV2_JNI_Device.cpp(694): warning C4800: 'jint' : forcing value to bool 'true' or 'false' (performance warning)
+  KinectPV2.cpp
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(268): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(269): warning C4244: 'return' : conversion from 'float' to 'int', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(272): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+c:\users\tom\documents\programacion\k2w\build\build\vc2012\kinectlib_v2.0\KinectPV2.h(273): warning C4244: 'return' : conversion from 'float' to 'int', possible loss of data
+KinectPV2.cpp(320): warning C4305: 'return' : truncation from 'int' to 'bool'
+KinectPV2.cpp(327): warning C4305: 'return' : truncation from 'int' to 'bool'
+KinectPV2.cpp(694): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+KinectPV2.cpp(695): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+KinectPV2.cpp(696): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+KinectPV2.cpp(1329): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1330): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1331): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1332): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1334): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1335): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1336): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1337): warning C4244: '=' : conversion from 'INT32' to 'float', possible loss of data
+KinectPV2.cpp(1342): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1343): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1344): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1346): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1347): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1348): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+KinectPV2.cpp(1510): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1512): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1514): warning C4244: '=' : conversion from 'TrackingState' to 'float', possible loss of data
+KinectPV2.cpp(1515): warning C4244: '=' : conversion from 'JointType' to 'float', possible loss of data
+KinectPV2.cpp(1568): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1570): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1572): warning C4244: '=' : conversion from 'TrackingState' to 'float', possible loss of data
+KinectPV2.cpp(1573): warning C4244: '=' : conversion from 'JointType' to 'float', possible loss of data
+KinectPV2.cpp(1629): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1632): warning C4244: '=' : conversion from 'HandState' to 'float', possible loss of data
+KinectPV2.cpp(1634): warning C4244: '=' : conversion from 'TrackingState' to 'float', possible loss of data
+KinectPV2.cpp(1635): warning C4244: '=' : conversion from 'JointType' to 'float', possible loss of data
+KinectPV2.cpp(1779): warning C4018: '<' : signed/unsigned mismatch
+KinectPV2.cpp(1829): warning C4172: returning address of local variable or temporary
+KinectPV2.cpp(1842): warning C4172: returning address of local variable or temporary
+     Creating library ..\..\Eclipse\lib\KinectPV2.lib and object ..\..\Eclipse\lib\KinectPV2.exp
+  Generating code
+  Finished generating code
+  KinectLib_V2.0.vcxproj -> C:\Users\tom\Documents\Programacion\K2W\Build\Build\vc2012\KinectLib_V2.0\..\..\Eclipse\lib\KinectPV2.dll
