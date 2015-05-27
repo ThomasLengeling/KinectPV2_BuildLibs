@@ -14,8 +14,6 @@ namespace KinectPV2{
 
 		~DeviceOptions(){}
 
-		//BASIC FUNCTIONS
-
 		void			enableColorImage(bool toggle = true){
 							initToggleColorFrame = toggle;
 							toggleColorFrame = toggle;
@@ -31,36 +29,39 @@ namespace KinectPV2{
 							toggleDepthFrame = toggle;
 		}
 
+
+		void            enableBodyTrack(bool toggle = true){
+							toggleBodyIndexFrame = toggle;
+							initToggleBodyIndexFrame = toggle;
+		}
+
 		void			enableDepthMaskImage(bool toggle = true){
 							initToggleBodyIndexFrame = toggle;
 							initToggleDepthFrame = toggle;
 							toggleDepthFrame = toggle;
 							toggleBodyIndexDepthFrame = toggle;
+							toggleBodyIndexFrame = toggle;
 		}
 
-		void			enableDepthSmooth(bool toggle){ 
-							toggleDepthSmooth = toggle;
-		}
+		void			enableDepthSmooth(bool toggle){ toggleDepthSmooth = toggle; }
 
-		//FACE
+
 		void			enableFaceDetection(bool toggle = false){
 							initToggleInfraredFrame = toggle;
 							initToggleColorFrame = toggle;
 							initToggleSkeleton = toggle;
 							initToggleFaceDetection = toggle;
 							toggleFaceDetection = toggle;
-							toggleInFraredFrame = toggle;
-							toggleColorFrame = toggle;
+							//toggleInFraredFrame = toggle;
+							//toggleColorFrame = toggle;
 		}
 
-		//HD FACE
 		void			enableHDFaceDetection(bool toggle = false){
 							initToggleInfraredFrame = toggle;
 							initToggleColorFrame = toggle;
 							initToggleSkeleton = toggle;
 							initToggleHDFaceDetection = toggle;
 							toggleHDFaceDetection = toggle;
-							toggleSkeleton = toggle;
 			//toggleBodyTrack = true;
 		}
 
@@ -75,40 +76,29 @@ namespace KinectPV2{
 							toggleInFraredFrame = toggle;
 		}
 
-		void			enableInFraredExposureImage(bool toggle = true){
+		void			enableInFraredLongExposureImage(bool toggle = true){
 							initToggleLongExposureInfraredFrame = toggle;
 							toggleLongExposureInFraredFrame = toggle;
 		}
 
 
-		void            enableBodyIndex(bool toggle = true){
-							toggleBodyIndexFrame = toggle;
-							initToggleBodyIndexFrame = toggle;
-		}
 
-		void			enablePointCloudDepth(bool toggle = true){ 
-							togglePointCloudFrame = toggle; 
-						}
-						
+		void			enablePointCloud(bool toggle = true){ togglePointCloudFrame = toggle; }
 		void			enablePointCloudColor(bool toggle = true){
 							togglePointCloudColorFrame = toggle;
-							toggleDepthFrame = toggle;
 							initToggleDepthFrame = toggle;
 							initToggleColorFrame = toggle;
 		}
 
-		void			enableRawDepthData(bool toggle = true){ 
-							toggleRawDepthData = toggle; 
-		}
-
+		void			enableRawDepthData(bool toggle = true){ toggleRawDepthData = toggle; }
 
 		void			enableSkeleton(bool toggle = true){
 							initToggleSkeleton = toggle;
-							initToggleDepthFrame = toggle;
-							initToggleColorFrame = toggle;
+							//initToggleDepthFrame = toggle;
+							//initToggleColorFrame = toggle;
 							toggleSkeleton = toggle;
-							toggleDepthFrame = toggle;
-							toggleColorFrame = toggle;
+							//toggleDepthFrame = toggle;
+							//toggleColorFrame = toggle;
 		}
 
 		inline bool		isEnableColorFrame(){ return toggleColorFrame; }
@@ -119,19 +109,28 @@ namespace KinectPV2{
 		inline bool		isEnableDepthSmoothFrame(){ return toggleDepthSmooth; }
 
 		inline bool		isEnableInFraredFrame(){ return toggleInFraredFrame; }
-		inline bool		isEnableLongExposureInfraredFrame(){ return toggleLongExposureInFraredFrame; }
+		inline bool		isEnableInfraredLongExposureFrame(){ return toggleLongExposureInFraredFrame; }
 
 		inline bool     isEnableFaceDetection(){ return toggleFaceDetection; }
 		inline bool		isEnableHDFaceDetection(){ return toggleHDFaceDetection; }
 
 		inline bool		isEnableBodyIndex(){ return toggleBodyIndexFrame; }
 
-		inline bool		isEnablePointCloudDepth(){ return togglePointCloudFrame; }
+		inline bool		isEnablePointCloud(){ return togglePointCloudFrame; }
 		inline bool		isEnablePointCloudColor(){ return togglePointCloudColorFrame; }
 
 		inline bool		isEnableRawDepthData(){ return toggleRawDepthData; }
 
 		inline bool     isEnableSkeleton(){ return toggleSkeleton; }
+
+		inline void     enableSkeletonDepthMap(bool toggle = true){ toggleSkeletonDepthMap = toggle; }
+		inline void     enableSkeletonColorMap(bool toggle = true){ toggleSkeletonColorMap = toggle; }
+		inline void     enableSkeleton3DMap(bool toggle = true){ toggleSkeleton3DMap = toggle; }
+
+
+		inline bool     isEnableSkeletonDepthMap(){ return toggleSkeletonDepthMap; }
+		inline bool     isEnableSkeletonColorMap(){ return toggleSkeletonColorMap; }
+		inline bool     isEnableSkeleton3DMap(){ return toggleSkeleton3DMap; }
 
 		inline bool		isEnableCoordinateMappingColor(){ return togglCoodinateMappingColor; }
 
@@ -168,6 +167,9 @@ namespace KinectPV2{
 		bool		toggleBodyIndexDepthFrame;
 
 		bool		toggleSkeleton;
+		bool		toggleSkeletonDepthMap;
+		bool		toggleSkeletonColorMap;
+		bool		toggleSkeleton3DMap;
 
 		bool		togglCoodinateMappingColor;
 
@@ -180,6 +182,7 @@ namespace KinectPV2{
 		bool		initToggleFaceDetection;
 		bool		initToggleLongExposureInfraredFrame;
 		bool		initToggleHDFaceDetection;
+
 
 	};
 }
