@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KinectLib_V2.0", "KinectLib_V2.0\KinectLib_V2.0.vcxproj", "{9CDC8431-EB3E-4BEB-8FC5-7BF505672B65}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KinectPV2", "KinectPV2\KinectPV2.vcxproj", "{9CDC8431-EB3E-4BEB-8FC5-7BF505672B65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

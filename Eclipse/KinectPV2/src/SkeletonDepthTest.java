@@ -1,17 +1,7 @@
-import java.nio.FloatBuffer;
-
-import KinectPV2.FaceFeatures;
 import KinectPV2.KJoint;
 import KinectPV2.KinectPV2;
 import KinectPV2.Skeleton;
-import KinectPV2.FaceData;
-import KinectPV2.HDFaceData;
-import KinectPV2.KRectangle;
 import processing.core.*;
-import processing.opengl.PGL;
-import processing.opengl.PJOGL;
-
-import javax.media.opengl.GL2;
 
 
 public class SkeletonDepthTest  extends PApplet{
@@ -27,7 +17,7 @@ public class SkeletonDepthTest  extends PApplet{
 
 	  //Enables depth and Body tracking (mask image)
 	  kinect.enableBodyTrackImg(true);
-	  kinect.enableDepthMaskImg(true);
+	//  kinect.enableDepthMaskImg(true);
 	  //kinect.enableDepthImg(true);
 	  kinect.enableSkeletonDepthMap(true );
 
@@ -39,7 +29,7 @@ public class SkeletonDepthTest  extends PApplet{
 	public void draw() {
 	  background(0);
 	  image(kinect.getBodyTrackImage(), 0, 0);
-	  image(kinect.getDepthMaskImage(), 512, 0);
+	  //image(kinect.getDepthMaskImage(), 512, 0);
 	 // image(kinect.getDepthImage(), 0, 0);
 	  skeleton =  kinect.getSkeletonDepthMap();
 

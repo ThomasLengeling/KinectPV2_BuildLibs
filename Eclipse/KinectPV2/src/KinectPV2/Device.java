@@ -159,6 +159,9 @@ public class Device implements Constants, FaceProperties, SkeletonProperties,
 
 	protected void initDevice() {
 		startSensor = jniInit();
+		String load = jniVersion();
+		System.out.println("Version: " + load);
+		
 		if (startSensor == false) {
 			System.out.println("ERROR STARTING KINECT V2");
 			parent.exit();
@@ -168,9 +171,6 @@ public class Device implements Constants, FaceProperties, SkeletonProperties,
 			runningKinect = true;
 			(new Thread(this)).start();
 		}
-
-		String load = jniVersion();
-		System.out.println("Version: " + load);
 	}
 
 	// COPY IMAGES TYPES FROM JNI FUNTIONS
@@ -391,7 +391,6 @@ public class Device implements Constants, FaceProperties, SkeletonProperties,
 		for (int i = 0; i < BODY_COUNT; i++) {
 			skeletonDepth[i].createSkeletonData(rawData, i);
 		}
-
 		return skeletonDepth;
 	}
 

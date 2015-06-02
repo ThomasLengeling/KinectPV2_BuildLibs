@@ -1,17 +1,10 @@
-import java.nio.FloatBuffer;
+import java.nio.*;
 
-import KinectPV2.FaceFeatures;
-import KinectPV2.KJoint;
 import KinectPV2.KinectPV2;
-import KinectPV2.Skeleton;
-import KinectPV2.FaceData;
-import KinectPV2.HDFaceData;
-import KinectPV2.KRectangle;
 import processing.core.*;
 import processing.opengl.PGL;
-import processing.opengl.PJOGL;
+import processing.opengl.PShader;
 
-import javax.media.opengl.GL2;
 
 public class PointCloudColorTest extends PApplet {
 	/*
@@ -48,6 +41,9 @@ public class PointCloudColorTest extends PApplet {
 	float rotX = PI;
 
 	float depthVal = 0;
+	
+	PGL pgl;
+	PShader sh;
 
 	public void setup() {
 		size(1280, 720, P3D);
@@ -60,6 +56,10 @@ public class PointCloudColorTest extends PApplet {
 		//kinect.enablePointCloud(true);
 
 		kinect.init();
+		
+		// Loads a shader to render geometry w/out
+		// textures and lights.
+		sh = loadShader("frag.glsl", "vert.glsl");
 	}
 
 	public void draw() {
@@ -70,26 +70,24 @@ public class PointCloudColorTest extends PApplet {
 		FloatBuffer pointCloudBuffer = kinect.getPointCloudColorPos();
 		FloatBuffer colorBuffer = kinect.getColorChannelBuffer();
 
-		PJOGL pgl = (PJOGL) beginPGL();
-		GL2 gl2 = pgl.gl.getGL2();
+		pgl = beginPGL();
+		sh.bind();
+		
+		int  vertLoc = pgl.getAttribLocation(sh.glProgram, "vertex");
+		int  colorLoc = pgl.getAttribLocation(sh.glProgram, "color");
+		  
 
-		gl2.glEnable(GL2.GL_BLEND);
-		// gl2.glEnable(GL2.GL_POINT_SMOOTH);
-
-		gl2.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl2.glEnableClientState(GL2.GL_COLOR_ARRAY);
-		gl2.glColorPointer(3, GL2.GL_FLOAT, 0, colorBuffer);
-		gl2.glVertexPointer(3, GL2.GL_FLOAT, 0, pointCloudBuffer);
-
-		gl2.glTranslatef(width / 2, height / 2, zval);
-		gl2.glScalef(scaleVal, -1 * scaleVal, scaleVal);
-		gl2.glRotatef(a, 0.0f, 1.0f, 0.0f);
-
-		gl2.glDrawArrays(GL2.GL_POINTS, 0, kinect.WIDTHColor * kinect.HEIGHTColor);
-
-		gl2.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl2.glDisableClientState(GL2.GL_COLOR_ARRAY);
-		gl2.glDisable(GL2.GL_BLEND);
+		pgl.enableVertexAttribArray(vertLoc);
+		pgl.enableVertexAttribArray(colorLoc);
+		
+		//int vertData = kinect.WIDTHColor * kinect.HEIGHTColor;
+		  
+		pgl.vertexAttribPointer(vertLoc, 3, PGL.FLOAT, false, 0, pointCloudBuffer);
+		pgl.vertexAttribPointer(colorLoc, 3, PGL.FLOAT, false, 0, colorBuffer);
+		
+		pgl.drawArrays(PGL.TRIANGLES, 0, 3);
+		  
+		sh.unbind(); 
 		endPGL();
 
 		stroke(255, 0, 0);

@@ -1,17 +1,9 @@
-import java.nio.FloatBuffer;
-
-import KinectPV2.FaceFeatures;
 import KinectPV2.KJoint;
 import KinectPV2.KinectPV2;
 import KinectPV2.Skeleton;
 import KinectPV2.FaceData;
-import KinectPV2.HDFaceData;
-import KinectPV2.KRectangle;
 import processing.core.*;
-import processing.opengl.PGL;
-import processing.opengl.PJOGL;
 
-import javax.media.opengl.GL2;
 
 /*
 Copyright (C) 2014  Thomas Sanchez Lengeling.

@@ -23,18 +23,10 @@ Copyright (C) 2014  Thomas Sanchez Lengeling.
 
 import java.nio.FloatBuffer;
 
-import KinectPV2.FaceFeatures;
-import KinectPV2.KJoint;
 import KinectPV2.KinectPV2;
-import KinectPV2.Skeleton;
-import KinectPV2.FaceData;
-import KinectPV2.HDFaceData;
-import KinectPV2.KRectangle;
-import processing.core.*;
+import processing.core.PApplet;
 import processing.opengl.PGL;
-import processing.opengl.PJOGL;
-
-import javax.media.opengl.GL2;
+import processing.opengl.PShader;
 
 public class PointCloudDepthTest extends PApplet {
 
@@ -47,8 +39,10 @@ public class PointCloudDepthTest extends PApplet {
 	// Distance Threashold
 	int maxD = 5000; // 4m
 	int minD = 50;  //  1m
-	
 	//max 8000cm and min 5cm
+	
+	PGL pgl;
+	PShader sh;
 
 	public void setup() {
 		size(1280, 720, P3D);
@@ -63,6 +57,8 @@ public class PointCloudDepthTest extends PApplet {
 		kinect.setHighThresholdPC(maxD);
 
 		kinect.init();
+		
+		sh = loadShader("frag.glsl", "vert.glsl");
 	}
 
 	public void draw() {
@@ -76,24 +72,23 @@ public class PointCloudDepthTest extends PApplet {
 		kinect.setHighThresholdPC(maxD);
 
 		FloatBuffer pointCloudBuffer = kinect.getPointCloudDepthPos();
+		
+		pgl = beginPGL();
+		sh.bind();
+		
+		int  vertLoc = pgl.getAttribLocation(sh.glProgram, "vertex");
+		  
+		pgl.enableVertexAttribArray(vertLoc);
+		
+		int vertData = kinect.WIDTHColor * kinect.HEIGHTColor;
+		  
+		pgl.vertexAttribPointer(vertLoc, 3, PGL.FLOAT, false, 0, pointCloudBuffer);
 
-		PJOGL pgl = (PJOGL) beginPGL();
-		GL2 gl2 = pgl.gl.getGL2();
-
-		gl2.glEnable(GL2.GL_BLEND);
-		gl2.glEnable(GL2.GL_POINT_SMOOTH);
-
-		gl2.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-		gl2.glVertexPointer(3, GL2.GL_FLOAT, 0, pointCloudBuffer);
-
-		gl2.glTranslatef(width / 2, height / 2, zval);
-		gl2.glScalef(scaleVal, -1 * scaleVal, scaleVal);
-		gl2.glRotatef(a, 0.0f, 1.0f, 0.0f);
-
-		gl2.glDrawArrays(GL2.GL_POINTS, 0, kinect.WIDTHDepth * kinect.HEIGHTDepth);
-		gl2.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		gl2.glDisable(GL2.GL_BLEND);
+		pgl.drawArrays(PGL.POINTS , 0, vertData);
+		
+		sh.unbind(); 
 		endPGL();
+		
 		
 		stroke(255, 0, 0);
 		text(frameRate, 50, height - 50);
